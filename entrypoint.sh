@@ -7,7 +7,7 @@ python manage.py migrate
 echo "Creating superuser if not exists..."
 DJANGO_SUPERUSER_PASSWORD=admin123 python manage.py createsuperuser \
     --username admin \
-    --email falgund24@iitk.ac.in \
+    --email EMAIL_HOST_USER \
     --noinput 2>/dev/null || echo "Superuser already exists, skipping."
 
 echo "Starting Daphne..."
