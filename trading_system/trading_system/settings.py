@@ -111,7 +111,7 @@ DATABASES = { 'default': {
         #'OPTIONS': {
         #    'sslmode': 'require',
         #}
-    }
+    }}
 # =======
 DATABASES = {
     'default': dj_database_url.config(
