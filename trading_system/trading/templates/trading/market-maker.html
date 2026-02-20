@@ -1,0 +1,661 @@
+{% extends 'trading/base.html' %}
+
+{% block title %}Market Maker - NeoTrade{% endblock %}
+
+{% block content %}
+<style>
+  .mm-page {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+  }
+  .mm-header {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+  }
+  .mm-header h2 {
+    font-size: 1.6rem;
+    margin-bottom: 4px;
+  }
+  .mm-subtitle {
+    color: var(--muted);
+  }
+  .mm-grid {
+    display: grid;
+    gap: 24px;
+    grid-template-columns: minmax(320px, 2fr) minmax(280px, 1fr);
+  }
+  .mm-card-title {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+  .mm-badge {
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    background: rgba(33, 139, 255, 0.15);
+    color: var(--accent-2);
+  }
+  .mm-form-grid {
+    display: grid;
+    gap: 16px;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  }
+  .mm-section {
+    padding: 16px;
+    border-radius: 12px;
+    background: rgba(10, 17, 29, 0.55);
+    border: 1px solid rgba(255, 255, 255, 0.04);
+  }
+  .mm-section h4 {
+    margin-bottom: 12px;
+  }
+  .mm-actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 12px;
+    flex-wrap: wrap;
+  }
+  .mm-actions .btn {
+    flex: 1 1 180px;
+  }
+  .mm-table-wrap {
+    max-height: 360px;
+    overflow-y: auto;
+  }
+  .mm-kpi {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+  .mm-kpi div {
+    background: rgba(15, 24, 40, 0.8);
+    padding: 12px;
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.04);
+  }
+  .mm-kpi span {
+    display: block;
+    color: var(--muted);
+    font-size: 0.75rem;
+  }
+  @media (max-width: 980px) {
+    .mm-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
+
+<div class="mm-page">
+  <div class="mm-header">
+    <div>
+      <h2>Market Maker Console</h2>
+      <p class="mm-subtitle">Submit two-sided quotes, monitor exposure, and manage active orders.</p>
+    </div>
+    <a href="{% url 'orderbook' %}" class="btn">View Orderbook</a>
+  </div>
+
+  <div class="mm-grid">
+    <div class="card">
+      <div class="mm-card-title">
+        <h3>Place Two-Sided Quote</h3>
+        <span class="mm-badge">LIMIT ONLY</span>
+      </div>
+      <div class="mm-kpi">
+        <div>
+          <span>Bid / Ask</span>
+          Provide both sides
+        </div>
+        <div>
+          <span>Iceberg Orders</span>
+          Hidden quantities
+        </div>
+        <div>
+          <span>IOC + Stoploss</span>
+          One active option
+        </div>
+        <div>
+          <span>Visibility</span>
+          Disclosed >= 10%
+        </div>
+      </div>
+      <form method="post" id="mmForm" onsubmit="submitTwoSided(event)">
+        {% csrf_token %}
+        <input type="hidden" name="order_mode" id="order_mode_input" value="LIMIT">
+
+        <div class="mm-form-grid">
+          <div class="mm-section">
+            <h4>Bid (Buy)</h4>
+            <div class="form-group">
+              <label for="bid_quantity">Total Quantity</label>
+              <input type="number" id="bid_quantity" class="form-control" required min="1" onchange="validateDisclosed('bid')">
+              <small style="color: var(--muted);">Full order size</small>
+            </div>
+            <div class="form-group">
+              <label for="bid_disclosed">Disclosed Qty <span style="color: #2ea043; font-weight: 600;">🔓 Iceberg</span></label>
+              <input type="number" id="bid_disclosed" class="form-control" required min="1" onchange="validateDisclosed('bid')" placeholder="Visible on orderbook">
+              <small id="bid_disclosed_hint" style="color: var(--muted);">Min: <span id="bid_min_disc">-</span> | Hidden: <span id="bid_hidden">-</span></small>
+            </div>
+            <div class="form-group">
+              <label for="bid_price">Price</label>
+              <input type="number" id="bid_price" step="0.01" class="form-control" required onchange="updateSpread()">
+            </div>
+            <div class="form-group">
+              <label for="bid_is_ioc">IOC (Immediate/Cancel)</label>
+              <select id="bid_is_ioc" class="form-control" onchange="toggleOrderOptions('bid')">
+                <option value="False">No</option>
+                <option value="True">Yes</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="bid_stoploss">Stoploss Order</label>
+              <select id="bid_stoploss" class="form-control" onchange="toggleOrderOptions('bid')">
+                <option value="NO">No</option>
+                <option value="YES">Yes</option>
+              </select>
+            </div>
+            <div class="form-group" id="bid_target_group" style="display:none;">
+              <label for="bid_target" style="color: var(--warning);">Trigger Price (Stoploss)</label>
+              <input type="number" step="0.01" id="bid_target" class="form-control" placeholder="Trigger Price">
+            </div>
+          </div>
+
+          <div class="mm-section">
+            <h4>Ask (Sell)</h4>
+            <div class="form-group">
+              <label for="ask_quantity">Total Quantity</label>
+              <input type="number" id="ask_quantity" class="form-control" required min="1" onchange="validateDisclosed('ask')">
+              <small style="color: var(--muted);">Full order size</small>
+            </div>
+            <div class="form-group">
+              <label for="ask_disclosed">Disclosed Qty <span style="color: #2ea043; font-weight: 600;">🔓 Iceberg</span></label>
+              <input type="number" id="ask_disclosed" class="form-control" required min="1" onchange="validateDisclosed('ask')" placeholder="Visible on orderbook">
+              <small id="ask_disclosed_hint" style="color: var(--muted);">Min: <span id="ask_min_disc">-</span> | Hidden: <span id="ask_hidden">-</span></small>
+            </div>
+            <div class="form-group">
+              <label for="ask_price">Price</label>
+              <input type="number" id="ask_price" step="0.01" class="form-control" required onchange="updateSpread()">
+            </div>
+            <div class="form-group">
+              <label for="ask_is_ioc">IOC (Immediate/Cancel)</label>
+              <select id="ask_is_ioc" class="form-control" onchange="toggleOrderOptions('ask')">
+                <option value="False">No</option>
+                <option value="True">Yes</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="ask_stoploss">Stoploss Order</label>
+              <select id="ask_stoploss" class="form-control" onchange="toggleOrderOptions('ask')">
+                <option value="NO">No</option>
+                <option value="YES">Yes</option>
+              </select>
+            </div>
+            <div class="form-group" id="ask_target_group" style="display:none;">
+              <label for="ask_target" style="color: var(--warning);">Trigger Price (Stoploss)</label>
+              <input type="number" step="0.01" id="ask_target" class="form-control" placeholder="Trigger Price">
+            </div>
+          </div>
+        </div>
+
+        <div class="mm-actions">
+          <button type="submit" class="btn" id="submitBtn">Place Bid + Ask</button>
+          <button type="button" class="btn" onclick="resetFormFields();" style="background: transparent; border: 1px solid rgba(255,255,255,0.1);">Clear Form</button>
+        </div>
+      </form>
+    </div>
+
+    <div class="card">
+      <div class="mm-card-title">
+        <h3>Your Pending Orders</h3>
+        <span class="mm-badge">LIVE</span>
+      </div>
+      <div class="mm-table-wrap">
+        {% if orders %}
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Side</th>
+              <th>Qty</th>
+              <th>Price</th>
+              <th>Type</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for order in orders %}
+            {% if not order.is_matched %}
+            <tr id="order-{{ order.id }}">
+              <td style="color: {% if order.order_type == 'BUY' %}var(--success){% else %}var(--danger){% endif %}">
+                {{ order.order_type }}
+              </td>
+              <td>{{ order.quantity }} ({{ order.disclosed }})</td>
+              <td>{{ order.price }}</td>
+              <td>LIMIT</td>
+              <td>
+                <button class="btn btn-danger" style="padding: 2px 8px; font-size: 0.7rem;" onclick="cancelOrder('{{ order.id }}')">X</button>
+              </td>
+            </tr>
+            {% endif %}
+            {% endfor %}
+          </tbody>
+        </table>
+        {% else %}
+        <p class="text-center" style="color: var(--muted);">No pending orders.</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <div class="mm-grid" style="grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));">
+    <div class="card">
+      <div class="mm-card-title">
+        <h3 style="color: var(--warning);">Stoploss Orders</h3>
+        <span class="mm-badge" style="background: rgba(210, 153, 34, 0.2); color: var(--warning);">TRIGGERS</span>
+      </div>
+      <div class="mm-table-wrap">
+        {% if stoploss_orders %}
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Side</th>
+              <th>Qty</th>
+              <th>Limit Price</th>
+              <th>Trigger Price</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for order in stoploss_orders %}
+            <tr id="stoploss-{{ order.id }}">
+              <td>{{ order.order_type }}</td>
+              <td>{{ order.quantity }}</td>
+              <td>{{ order.price }}</td>
+              <td>{{ order.target_price }}</td>
+              <td>
+                <button class="btn btn-danger" style="padding: 2px 8px;" onclick="cancelStoploss('{{ order.id }}')">X</button>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+        {% else %}
+        <p class="text-center" style="color: var(--muted);">No stoploss orders.</p>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="mm-card-title">
+        <h3>Your Trades</h3>
+        <span class="mm-badge">FILLED</span>
+      </div>
+      <div class="mm-table-wrap">
+        {% if trades %}
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Buyer</th>
+              <th>Seller</th>
+              <th>Qty</th>
+              <th>Price</th>
+              <th>Time</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for trade in trades %}
+            <tr>
+              <td>{{ trade.buyer.username }}</td>
+              <td>{{ trade.seller.username }}</td>
+              <td>{{ trade.quantity }}</td>
+              <td>{{ trade.price }}</td>
+              <td>{{ trade.timestamp|date:"H:i:s" }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+        {% else %}
+        <p class="text-center" style="color: var(--muted);">No trades executed.</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  const bidQuantityInput = document.getElementById('bid_quantity');
+  const bidDisclosedInput = document.getElementById('bid_disclosed');
+  const askQuantityInput = document.getElementById('ask_quantity');
+  const askDisclosedInput = document.getElementById('ask_disclosed');
+
+  bidQuantityInput.addEventListener('input', function () {
+    bidDisclosedInput.value = this.value;
+    validateDisclosed(bidQuantityInput, bidDisclosedInput);
+  });
+
+  askQuantityInput.addEventListener('input', function () {
+    askDisclosedInput.value = this.value;
+    validateDisclosed(askQuantityInput, askDisclosedInput);
+  });
+
+  bidDisclosedInput.addEventListener('input', function () {
+    validateDisclosed(bidQuantityInput, bidDisclosedInput);
+  });
+
+  askDisclosedInput.addEventListener('input', function () {
+    validateDisclosed(askQuantityInput, askDisclosedInput);
+  });
+
+  function validateDisclosed(quantityInput, disclosedInput) {
+    const qty = parseFloat(quantityInput.value) || 0;
+    const disc = parseFloat(disclosedInput.value) || 0;
+    if (disc < qty * 0.1) {
+      disclosedInput.setCustomValidity(`Disclosed quantity must be at least ${qty * 0.1}`);
+    } else if (disc > qty) {
+      disclosedInput.setCustomValidity('Disclosed quantity cannot be greater than actual quantity');
+    } else {
+      disclosedInput.setCustomValidity('');
+    }
+  }
+
+  function toggleOrderOptions(side) {
+    const isIOC = document.getElementById(`${side}_is_ioc`).value === "True";
+    const isStoploss = document.getElementById(`${side}_stoploss`).value === "YES";
+    const targetPriceGroup = document.getElementById(`${side}_target_group`);
+    const targetInput = document.getElementById(`${side}_target`);
+
+    if (isIOC) {
+      document.getElementById(`${side}_stoploss`).value = "NO";
+      document.getElementById(`${side}_stoploss`).disabled = true;
+      targetPriceGroup.style.display = "none";
+    } else {
+      document.getElementById(`${side}_stoploss`).disabled = false;
+    }
+
+    if (isStoploss) {
+      targetPriceGroup.style.display = "block";
+      targetInput.required = true;
+      document.getElementById(`${side}_is_ioc`).value = "False";
+      document.getElementById(`${side}_is_ioc`).disabled = true;
+    } else {
+      targetPriceGroup.style.display = "none";
+      targetInput.required = false;
+      if (!isIOC) document.getElementById(`${side}_is_ioc`).disabled = false;
+    }
+  }
+
+  function submitTwoSided(event) {
+    event.preventDefault();
+    
+    // Get values
+    const bidQty = parseInt(document.getElementById('bid_quantity').value) || 0;
+    const bidDisc = parseInt(document.getElementById('bid_disclosed').value) || Math.max(1, Math.ceil(0.1 * bidQty));
+    const bidPrice = parseFloat(document.getElementById('bid_price').value) || 0;
+    
+    const askQty = parseInt(document.getElementById('ask_quantity').value) || 0;
+    const askDisc = parseInt(document.getElementById('ask_disclosed').value) || Math.max(1, Math.ceil(0.1 * askQty));
+    const askPrice = parseFloat(document.getElementById('ask_price').value) || 0;
+    
+    console.log('🚀 submitTwoSided called');
+    console.log('Bid:', {qty: bidQty, disc: bidDisc, price: bidPrice});
+    console.log('Ask:', {qty: askQty, disc: askDisc, price: askPrice});
+    
+    // Validate required fields
+    if (!bidQty || !bidPrice || !askQty || !askPrice) {
+      alert('❌ Error: All quantity and price fields are required');
+      return;
+    }
+    
+    // Validate spread (ask must be STRICTLY greater than bid)
+    if (askPrice <= bidPrice) {
+      alert(`❌ Error: Ask price (${askPrice}) must be GREATER than Bid price (${bidPrice})\n\nSpread too tight! Example: Bid 99.50, Ask 100.50`);
+      return;
+    }
+    
+    // Validate disclosed quantities (min 10%)
+    const minBidDisc = Math.ceil(0.1 * bidQty);
+    const minAskDisc = Math.ceil(0.1 * askQty);
+    
+    if (bidDisc < minBidDisc) {
+      alert(`❌ Bid: Disclosed quantity must be at least 10% (min: ${minBidDisc}, you entered: ${bidDisc})`);
+      return;
+    }
+    if (askDisc < minAskDisc) {
+      alert(`❌ Ask: Disclosed quantity must be at least 10% (min: ${minAskDisc}, you entered: ${askDisc})`);
+      return;
+    }
+    
+    // Auto-fill disclosed if empty
+    if (!document.getElementById('bid_disclosed').value) {
+      document.getElementById('bid_disclosed').value = minBidDisc;
+    }
+    if (!document.getElementById('ask_disclosed').value) {
+      document.getElementById('ask_disclosed').value = minAskDisc;
+    }
+    
+    const bidPayload = buildOrderPayload('BUY');
+    const askPayload = buildOrderPayload('SELL');
+    
+    console.log('📦 Payloads ready:');
+    console.log('Bid payload:', bidPayload);
+    console.log('Ask payload:', askPayload);
+    
+    // Show loading state
+    const submitBtn = document.getElementById('submitBtn');
+    const originalText = submitBtn.textContent;
+    submitBtn.disabled = true;
+    submitBtn.textContent = '⏳ Placing BID order...';
+
+    // Send BID first, then ASK (sequential instead of parallel for better control)
+    console.log('📤 Sending BID order...');
+    postOrder(bidPayload)
+      .then(bidResult => {
+        console.log('📨 BID response:', bidResult);
+        
+        if (!bidResult.success) {
+          throw new Error(`BID failed: ${bidResult.message}`);
+        }
+        
+        // BID successful, now send ASK
+        console.log('✅ BID placed successfully, now sending ASK...');
+        submitBtn.textContent = '⏳ Placing ASK order...';
+        
+        return postOrder(askPayload).then(askResult => {
+          console.log('📨 ASK response:', askResult);
+          return [bidResult, askResult];
+        });
+      })
+      .then(results => {
+        submitBtn.disabled = false;
+        submitBtn.textContent = originalText;
+        
+        const bidSuccess = results[0]?.success;
+        const askSuccess = results[1]?.success;
+        
+        console.log(`✓ BID: ${bidSuccess}, ✓ ASK: ${askSuccess}`);
+        
+        if (bidSuccess && askSuccess) {
+          console.log('✅ BOTH orders successful!');
+          alert('✅ SUCCESS!\n\nBoth Bid and Ask orders placed on orderbook:\n\n' +
+                `• BID: ${bidQty} @ ${bidPrice}\n` +
+                `• ASK: ${askQty} @ ${askPrice}\n\n` +
+                'Refreshing page...');
+          setTimeout(() => window.location.reload(), 1500);
+        } else {
+          const errors = [];
+          if (!bidSuccess) errors.push(`🔴 Bid: ${results[0]?.message}`);
+          if (!askSuccess) errors.push(`🔴 Ask: ${results[1]?.message}`);
+          alert('❌ Problem with orders:\n\n' + errors.join('\n'));
+        }
+      })
+      .catch((err) => {
+        submitBtn.disabled = false;
+        submitBtn.textContent = originalText;
+        console.error('💥 Error:', err.message);
+        alert('❌ Error: ' + err.message);
+      });
+  }
+
+  function buildOrderPayload(orderType) {
+    const side = orderType === 'BUY' ? 'bid' : 'ask';
+    const qty = parseInt(document.getElementById(`${side}_quantity`).value) || 0;
+    const disclosed = parseInt(document.getElementById(`${side}_disclosed`).value) || Math.max(1, Math.ceil(0.1 * qty));
+    
+    const payload = {
+      order_type: orderType,
+      quantity: qty.toString(),
+      disclosed_quantity: disclosed.toString(),
+      price: document.getElementById(`${side}_price`).value,
+      is_ioc: document.getElementById(`${side}_is_ioc`).value || 'False',
+      Stoploss_order: document.getElementById(`${side}_stoploss`).value || 'NO',
+      Target_price: document.getElementById(`${side}_target`).value || '',
+    };
+    
+    console.log(`Built ${orderType} payload:`, payload);
+    return payload;
+  }
+
+  function postOrder(payload) {
+    console.log(`📤 Posting ${payload.order_type} order to server...`);
+    
+    // Build form data carefully
+    const formData = new URLSearchParams();
+    formData.append('order_type', payload.order_type);
+    formData.append('quantity', payload.quantity);
+    formData.append('disclosed_quantity', payload.disclosed_quantity);
+    formData.append('price', payload.price);
+    formData.append('is_ioc', payload.is_ioc);
+    formData.append('Stoploss_order', payload.Stoploss_order);
+    formData.append('Target_price', payload.Target_price);
+    
+    console.log(`Form data being sent for ${payload.order_type}:`, Object.fromEntries(formData));
+    
+    return fetch(window.location.pathname, {
+      method: 'POST',
+      headers: {
+        'X-CSRFToken': getCookie('csrftoken')
+      },
+      body: formData
+    })
+      .then(response => {
+        console.log(`${payload.order_type} HTTP response:`, response.status, response.statusText);
+        
+        return response.text().then(text => {
+          console.log(`${payload.order_type} raw response body:`, text.substring(0, 200));
+          
+          try {
+            const data = JSON.parse(text);
+            console.log(`${payload.order_type} parsed JSON:`, data);
+            
+            if (response.ok) {
+              return {success: data.success !== false, message: data.message || 'Order placed'};
+            } else {
+              return {success: false, message: data.message || 'Server error'};
+            }
+          } catch (e) {
+            console.log(`${payload.order_type} - Failed to parse JSON:`, e.message);
+            if (response.ok) {
+              return {success: true, message: 'Order placed successfully'};
+            } else {
+              return {success: false, message: `HTTP ${response.status}`};
+            }
+          }
+        });
+      })
+      .catch(err => {
+        console.error(`${payload.order_type} network error:`, err);
+        return {
+          success: false,
+          message: `Network error: ${err.message}`
+        };
+      });
+  }
+
+  function resetFormFields() {
+    document.getElementById('mmForm').reset();
+    document.getElementById('bid_min_disc').textContent = '-';
+    document.getElementById('bid_hidden').textContent = '-';
+    document.getElementById('ask_min_disc').textContent = '-';
+    document.getElementById('ask_hidden').textContent = '-';
+  }
+
+  function validateDisclosed(side) {
+    const qtyElem = document.getElementById(`${side}_quantity`);
+    const discElem = document.getElementById(`${side}_disclosed`);
+    const minElem = document.getElementById(`${side}_min_disc`);
+    const hiddenElem = document.getElementById(`${side}_hidden`);
+    
+    if (!qtyElem.value) return;
+    
+    const qty = parseInt(qtyElem.value) || 0;
+    const disc = parseInt(discElem.value) || 0;
+    const minDisc = Math.max(1, Math.ceil(0.1 * qty));
+    const hidden = Math.max(0, qty - disc);
+    
+    if (minElem) minElem.textContent = minDisc;
+    if (hiddenElem) hiddenElem.textContent = hidden;
+    
+    if (disc && disc > qty) {
+      discElem.value = qty;
+    }
+  }
+
+  function updateSpread() {
+    const bidPrice = parseFloat(document.getElementById('bid_price').value) || 0;
+    const askPrice = parseFloat(document.getElementById('ask_price').value) || 0;
+    const spread = askPrice - bidPrice;
+    
+    // Remove any existing warnings
+    const existingWarning = document.querySelector('[data-warning="spread"]');
+    if (existingWarning) existingWarning.remove();
+    
+    if (askPrice > 0 && bidPrice > 0) {
+      if (spread <= 0) {
+        const warning = document.createElement('div');
+        warning.setAttribute('data-warning', 'spread');
+        warning.style.cssText = 'padding: 8px; background: rgba(248,81,73,0.1); border: 1px solid #f85149; border-radius: 6px; color: #f85149; margin-bottom: 8px; font-size: 0.9rem;';
+        warning.textContent = '⚠️ INVALID SPREAD: Ask must be GREATER than Bid (ask <= bid will cause self-matching)';
+        const formGrid = document.querySelector('.mm-form-grid');
+        if (formGrid && formGrid.parentElement) {
+          formGrid.parentElement.insertBefore(warning, formGrid);
+        }
+      } else if (spread > 0) {
+        // Show positive feedback for valid spread
+        console.log(`✓ Valid spread: ${spread.toFixed(2)} (Bid: ${bidPrice}, Ask: ${askPrice})`);
+      }
+    }
+  }
+
+  function cancelOrder(orderId) {
+    if (!confirm("Cancel order?")) return;
+    fetch("{% url 'cancel_order' %}", {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCookie('csrftoken') },
+      body: JSON.stringify({ order_id: orderId })
+    }).then(r => r.json()).then(d => {
+      if (d.success) document.getElementById('order-' + orderId).remove();
+      else alert(d.message);
+    });
+  }
+
+  function cancelStoploss(orderId) {
+    if (!confirm("Cancel stoploss order?")) return;
+    fetch("{% url 'cancel_stoploss_order' %}", {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCookie('csrftoken') },
+      body: JSON.stringify({ order_id: orderId })
+    }).then(r => r.json()).then(d => {
+      if (d.success) document.getElementById('stoploss-' + orderId).remove();
+      else alert(d.message);
+    });
+  }
+</script>
+{% endblock %}

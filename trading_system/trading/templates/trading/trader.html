@@ -1,0 +1,203 @@
+{% extends 'trading/base.html' %}
+
+{% block title %}Trader Dashboard - NeoTrade{% endblock %}
+
+{% block content %}
+<div class="row">
+  <div class="col-half" style="margin: 0 auto;">
+    <div class="card">
+      <h2>Place Market Order</h2>
+      <p style="color: var(--muted); margin-bottom: 12px;">Traders can only buy or sell at market price.</p>
+      <div style="margin-bottom: 16px;">
+        <a href="{% url 'orderbook' %}" class="btn" style="width: 100%;">View Orderbook</a>
+      </div>
+      <form method="post" id="traderForm">
+        {% csrf_token %}
+        <input type="hidden" name="order_mode" value="MARKET">
+        <input type="hidden" name="is_ioc" value="False">
+        <input type="hidden" name="Stoploss_order" value="NO">
+        <input type="hidden" name="Target_price" value="">
+
+        <div class="form-group">
+          <label for="order_type">Order Type</label>
+          <select name="order_type" id="order_type" class="form-control" onchange="updatePriceEstimate()">
+            <option value="BUY">Buy (Ask Price)</option>
+            <option value="SELL">Sell (Bid Price)</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="quantity">Quantity</label>
+          <input type="number" id="quantity" name="quantity" class="form-control" required min="1">
+        </div>
+
+        <div class="form-group">
+          <label for="disclosed_quantity">Disclosed Quantity</label>
+          <input type="number" id="disclosed_quantity" name="disclosed_quantity" class="form-control" required min="1">
+          <small style="color: var(--muted); display: block; margin-top: 5px;">Must be at least 10% of Quantity.</small>
+        </div>
+
+        <div class="form-group">
+          <label id="price-label">Estimated Price</label>
+          <input type="text" id="estimated_price" class="form-control" disabled value="Select Order Type">
+        </div>
+
+        <button type="submit" class="btn" style="width: 100%;">Execute Market Order</button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<div class="row">
+  <div class="col">
+    <div class="card">
+      <h3>Active Orders</h3>
+      <div class="table-responsive">
+        {% if orders %}
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Side</th>
+              <th>Qty</th>
+              <th>Disclosed</th>
+              <th>Status</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for order in orders %}
+            {% if not order.is_matched %}
+            <tr id="order-{{ order.id }}">
+              <td style="color: {% if order.order_type == 'BUY' %}var(--success){% else %}var(--danger){% endif %}">
+                {{ order.order_type }}
+              </td>
+              <td>{{ order.quantity }}</td>
+              <td>{{ order.disclosed }}</td>
+              <td>Unmatched</td>
+              <td>
+                <button class="btn btn-danger" style="padding: 5px 10px; font-size: 0.8rem;" onclick="cancelOrder('{{ order.id }}')">Cancel</button>
+              </td>
+            </tr>
+            {% endif %}
+            {% endfor %}
+          </tbody>
+        </table>
+        {% else %}
+        <p class="text-center" style="color: var(--muted);">No active orders.</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <div class="col">
+    <div class="card">
+      <h3>Recent Trades</h3>
+      <div class="table-responsive">
+        {% if trades %}
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Buyer</th>
+              <th>Seller</th>
+              <th>Qty</th>
+              <th>Price</th>
+              <th>Time</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for trade in trades %}
+            <tr>
+              <td>{{ trade.buyer.username }}</td>
+              <td>{{ trade.seller.username }}</td>
+              <td>{{ trade.quantity }}</td>
+              <td>{{ trade.price }}</td>
+              <td>{{ trade.timestamp|date:"H:i:s" }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+        {% else %}
+        <p class="text-center" style="color: var(--muted);">No trades yet.</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  const quantityInput = document.getElementById('quantity');
+  const disclosedInput = document.getElementById('disclosed_quantity');
+
+  quantityInput.addEventListener('input', function () {
+    disclosedInput.value = this.value;
+    validateDisclosed();
+  });
+
+  disclosedInput.addEventListener('input', validateDisclosed);
+
+  function validateDisclosed() {
+    const qty = parseFloat(quantityInput.value) || 0;
+    const disc = parseFloat(disclosedInput.value) || 0;
+    if (disc < qty * 0.1) {
+      disclosedInput.setCustomValidity(`Disclosed quantity must be at least ${qty * 0.1}`);
+    } else if (disc > qty) {
+      disclosedInput.setCustomValidity('Disclosed quantity cannot be greater than actual quantity');
+    } else {
+      disclosedInput.setCustomValidity('');
+    }
+  }
+
+  function updatePriceEstimate() {
+    const type = document.getElementById('order_type').value;
+    const priceField = document.getElementById('estimated_price');
+
+    const url = type === 'BUY' ? '/orderbook/get_best_ask/' : '/orderbook/get_best_bid/';
+
+    priceField.value = "Fetching...";
+
+    fetch(url)
+      .then(res => res.json())
+      .then(data => {
+        const key = type === 'BUY' ? 'best_ask' : 'best_bid';
+        const best = data[key];
+
+        if (best && best.price) {
+          priceField.value = best.price;
+        } else {
+          priceField.value = "Market Price (No pending orders)";
+        }
+      })
+      .catch(err => {
+        console.error(err);
+        priceField.value = "Unavailable";
+      });
+  }
+
+  function cancelOrder(orderId) {
+    if (!confirm("Are you sure you want to cancel this order?")) return;
+
+    fetch("{% url 'cancel_order' %}", {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': getCookie('csrftoken')
+      },
+      body: JSON.stringify({ order_id: orderId })
+    })
+    .then(res => res.json())
+    .then(data => {
+      if (data.success) {
+        const row = document.getElementById('order-' + orderId);
+        if (row) row.remove();
+      } else {
+        alert(data.message || "Failed to cancel order");
+      }
+    })
+    .catch(err => console.error(err));
+  }
+
+  document.addEventListener('DOMContentLoaded', updatePriceEstimate);
+</script>
+{% endblock %}

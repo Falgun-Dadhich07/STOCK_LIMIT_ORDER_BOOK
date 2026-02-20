@@ -1,0 +1,40 @@
+{% extends 'trading/base.html' %}
+
+{% block title %}Admin Console - NeoTrade{% endblock %}
+
+{% block content %}
+<div class="row">
+  <div class="col">
+    <div class="card">
+      <h2 style="margin-bottom: 8px;">Admin Console</h2>
+      <p style="color: var(--muted); margin-bottom: 16px;">
+        Manage users, monitor the orderbook, and control system tools from one place.
+      </p>
+      <div class="row">
+        <div class="col">
+          <h3 style="margin-bottom: 10px;">User Management</h3>
+          <div style="display: grid; gap: 10px;">
+            <a class="btn" href="{% url 'bulk_user_upload' %}">Bulk User Upload</a>
+            <a class="btn" href="{% url 'bulk_user_delete' %}">Bulk User Delete</a>
+          </div>
+        </div>
+        <div class="col">
+          <h3 style="margin-bottom: 10px;">Orderbook Tools</h3>
+          <div style="display: grid; gap: 10px;">
+            <a class="btn" href="{% url 'orderbook' %}">View Live Orderbook</a>
+            <a class="btn" href="{% url 'modify' %}">Modify Orderbook</a>
+            <a class="btn" href="{% url 'modify_page' %}">Edit Specific Order</a>
+          </div>
+        </div>
+        <div class="col">
+          <h3 style="margin-bottom: 10px;">Security</h3>
+          <div style="display: grid; gap: 10px;">
+            <a class="btn" href="{% url 'password_reset' %}">Reset Password</a>
+            <a class="btn btn-danger" href="{% url 'clear_database' %}">Clear Orderbook</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

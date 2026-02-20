@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{% block title %}NeoTrade{% endblock %}</title>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0b1220;
+      --bg-2: #0f1a2b;
+      --panel: #1a2433;
+      --panel-2: #1e2a3a;
+      --panel-border: rgba(255, 255, 255, 0.06);
+      --text: #e6edf6;
+      --muted: #9fb0c7;
+      --accent: #1f6feb;
+      --accent-2: #218bff;
+      --danger: #f85149;
+      --success: #2ea043;
+      --warning: #d29922;
+      --shadow: 0 18px 40px rgba(0, 0, 0, 0.35);
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: "Manrope", sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at 20% 10%, rgba(31, 111, 235, 0.15), transparent 40%),
+        radial-gradient(circle at 80% 0%, rgba(33, 139, 255, 0.1), transparent 45%),
+        linear-gradient(135deg, var(--bg), var(--bg-2));
+      min-height: 100vh;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+      background-size: 36px 36px;
+      pointer-events: none;
+      z-index: 0;
+      opacity: 0.4;
+    }
+
+    .shell {
+      position: relative;
+      z-index: 1;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 20px 40px;
+      border-bottom: 1px solid var(--panel-border);
+      background: rgba(11, 18, 32, 0.9);
+      backdrop-filter: blur(14px);
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-weight: 700;
+      font-size: 1.3rem;
+      letter-spacing: 0.4px;
+    }
+
+    .brand span {
+      color: var(--accent);
+    }
+
+    .role-pill {
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 0.78rem;
+      padding: 4px 12px;
+      border-radius: 999px;
+      border: 1px solid rgba(33, 139, 255, 0.4);
+      color: var(--accent-2);
+      background: rgba(33, 139, 255, 0.12);
+    }
+
+    .nav {
+      display: flex;
+      gap: 16px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .nav a {
+      color: var(--muted);
+      text-decoration: none;
+      font-weight: 600;
+      padding: 8px 14px;
+      border-radius: 10px;
+      transition: all 0.2s ease;
+      border: 1px solid transparent;
+    }
+
+    .nav a:hover {
+      color: var(--text);
+      border-color: rgba(33, 139, 255, 0.4);
+      background: rgba(33, 139, 255, 0.12);
+    }
+
+    .content {
+      flex: 1;
+      padding: 32px 40px 60px;
+    }
+
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--panel-border);
+      border-radius: 14px;
+      padding: 24px;
+      box-shadow: var(--shadow);
+    }
+
+    .row {
+      display: flex;
+      gap: 24px;
+      flex-wrap: wrap;
+    }
+
+    .col {
+      flex: 1 1 320px;
+    }
+
+    .col-half {
+      flex: 0 1 520px;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      color: #f5faff;
+      border: none;
+      border-radius: 8px;
+      padding: 10px 18px;
+      font-weight: 700;
+      cursor: pointer;
+      text-decoration: none;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      box-shadow: 0 10px 18px rgba(31, 111, 235, 0.25);
+    }
+
+    .btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 12px 22px rgba(31, 111, 235, 0.35);
+    }
+
+    .btn-danger {
+      background: linear-gradient(135deg, #f85149, #d1242f);
+      color: #fff5f5;
+    }
+
+    .form-group {
+      margin-bottom: 16px;
+    }
+
+    .form-control {
+      width: 100%;
+      padding: 12px 14px;
+      border-radius: 10px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      background: rgba(13, 23, 38, 0.9);
+      color: var(--text);
+      font-family: "IBM Plex Mono", monospace;
+    }
+
+    .form-control:focus {
+      outline: none;
+      border-color: rgba(33, 139, 255, 0.7);
+      box-shadow: 0 0 0 3px rgba(33, 139, 255, 0.2);
+    }
+
+    .table-responsive {
+      overflow-x: auto;
+    }
+
+    .table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.95rem;
+      background: var(--panel-2);
+      border-radius: 10px;
+      overflow: hidden;
+    }
+
+    .table th,
+    .table td {
+      padding: 12px 14px;
+      text-align: left;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    .table th {
+      color: var(--accent);
+      font-weight: 700;
+      font-family: "IBM Plex Mono", monospace;
+    }
+
+    .table tr:hover {
+      background: rgba(33, 139, 255, 0.08);
+    }
+
+    .text-center {
+      text-align: center;
+    }
+
+    .flash-stack {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      display: grid;
+      gap: 10px;
+      z-index: 10;
+    }
+
+    .flash {
+      padding: 12px 16px;
+      border-radius: 10px;
+      background: rgba(16, 24, 34, 0.95);
+      border: 1px solid var(--panel-border);
+      font-size: 0.9rem;
+    }
+
+    .flash.success {
+      border-left: 4px solid var(--success);
+    }
+
+    .flash.error {
+      border-left: 4px solid var(--danger);
+    }
+
+    .flash.warning {
+      border-left: 4px solid var(--warning);
+    }
+
+    @media (max-width: 900px) {
+      .topbar {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+      }
+
+      .content {
+        padding: 24px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <header class="topbar">
+      <div class="brand">
+        Neo<span>Trade</span>
+        {% if base_role %}<span class="role-pill">{{ base_role }}</span>{% endif %}
+      </div>
+      <nav class="nav">
+        {% if user.is_authenticated %}
+          {% if base_role == "TRADER" %}
+            <a href="{% url 'trader_home' %}">Trader Dashboard</a>
+          {% elif base_role == "MARKET_MAKER" %}
+            <a href="{% url 'mm_home' %}">Market Maker Dashboard</a>
+          {% elif base_role == "ADMIN" %}
+            <a href="{% url 'admin_home' %}">Admin Console</a>
+          {% endif %}
+          <a href="{% url 'orderbook' %}">Orderbook</a>
+          {% if base_role == "ADMIN" or user.is_staff or user.is_superuser %}
+            <a href="{% url 'admin_home' %}">Admin</a>
+          {% endif %}
+          <a href="{% url 'logout' %}">Logout</a>
+        {% else %}
+          <a href="{% url 'login' %}">Login</a>
+          <a href="{% url 'register' %}">Register</a>
+        {% endif %}
+      </nav>
+    </header>
+
+    {% if messages %}
+      <div class="flash-stack">
+        {% for message in messages %}
+          <div class="flash {% if message.tags %}{{ message.tags }}{% endif %}">{{ message }}</div>
+        {% endfor %}
+      </div>
+    {% endif %}
+
+    <main class="content">
+      {% block content %}{% endblock %}
+    </main>
+  </div>
+
+  <script>
+    function getCookie(name) {
+      let cookieValue = null;
+      if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+          const cookie = cookies[i].trim();
+          if (cookie.substring(0, name.length + 1) === (name + '=')) {
+            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+            break;
+          }
+        }
+      }
+      return cookieValue;
+    }
+  </script>
+  {% block scripts %}{% endblock %}
+</body>
+</html>
