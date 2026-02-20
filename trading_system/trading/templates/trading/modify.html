@@ -1,38 +1,119 @@
-{% extends 'trading/base.html' %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modify Orders</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap');
 
-{% block title %}Modify Orders - NeoTrade{% endblock %}
+        :root {
+            --background: #1e1e2f;
+            --card-bg: #2b2b3c;
+            --accent-gradient: linear-gradient(135deg, #ff7e5f 0%, #feb47b 100%);
+            --text-primary: #ffffff;
+            --text-secondary: #b0bec5;
+            --card-border: #37474f;
+            --table-header-bg: #37474f;
+            --table-row-hover: rgba(255, 126, 95, 0.1);
+            --highlight-color: #ff7e5f;
+        }
 
-{% block content %}
-<style>
-    .container {
-        max-width: 1400px;
-        margin: 0 auto;
-        animation: fadeIn 0.8s ease-in-out;
-    }
-    @keyframes fadeIn {
-        from { opacity: 0; transform: translateY(8px); }
-        to { opacity: 1; transform: translateY(0); }
-    }
-    .dashboard-title {
-        color: var(--accent);
-        text-align: center;
-        margin-bottom: 32px;
-    }
-    h3 {
-        color: var(--accent);
-        margin-bottom: 12px;
-    }
-</style>
+        body {
+            background: var(--background);
+            color: var(--text-primary);
+            font-family: 'Inter', sans-serif;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+        }
 
-<div class="container">
-    <h2 class="dashboard-title">Modify Order</h2>
+        .container {
+            max-width: 2800px;
+            margin: 0 auto;
+            animation: fadeIn 1s ease-in-out;
+        }
 
-    <div class="row">
-        <div class="col">
-            <div class="card">
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .dashboard-title {
+            color: var(--highlight-color);
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 16px;
+            color: var(--text-primary);
+            margin-bottom: 20px;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0px 10px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .card h4 {
+            color: var(--highlight-color);
+        }
+
+        .table {
+            color: var(--text-primary);
+            background: var(--card-bg);
+            margin-bottom: 20px;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .table th {
+            background: var(--table-header-bg);
+            color: var(--highlight-color);
+        }
+
+        .table tbody tr:hover {
+            background: linear-gradient(135deg, #6ab1ec, #4f9dd5);
+        }
+
+        h3 {
+            color: var(--highlight-color);
+            margin-top: 20px;
+        }
+
+        .alert {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 12px;
+            padding: 20px 25px;
+            margin-bottom: 20px;
+            box-shadow: 0px 10px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .alert-success {
+            border-left: 4px solid var(--highlight-color);
+        }
+
+        .alert-warning {
+            border-left: 4px solid #f39c12;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2 class="dashboard-title">Modify Order</h2>
+        
+        <div class="row">
+            <div class="col-md-6 mb-4">
                 <h3>Buy Orders</h3>
                 <div class="table-responsive">
-                    <table id="buy-orders" class="table">
+                    <table id="buy-orders" class="table table-striped">
                         <thead>
                             <tr>
                                 <th>Price</th>
@@ -47,13 +128,10 @@
                     </table>
                 </div>
             </div>
-        </div>
-
-        <div class="col">
-            <div class="card">
+            <div class="col-md-6 mb-4">
                 <h3>Sell Orders</h3>
                 <div class="table-responsive">
-                    <table id="sell-orders" class="table">
+                    <table id="sell-orders" class="table table-striped">
                         <thead>
                             <tr>
                                 <th>Price</th>
@@ -69,101 +147,121 @@
                 </div>
             </div>
         </div>
-    </div>
-</div>
-{% endblock %}
+    <script>
 
-{% block scripts %}
-<script>
-    function updateBuyOrders() {
-        fetch('/orderbook/get_buy_orders/')
-            .then(response => response.json())
-            .then(data => {
-                const tableBody = document.querySelector('#buy-orders tbody');
-                tableBody.innerHTML = '';
+        function updateBuyOrders() {
+            fetch('get_buy_orders/') // URL for fetching Buy Orders
+                .then(response => response.json())
+                .then(data => {
+                    const tableBody = document.querySelector('#buy-orders tbody');
+                    tableBody.innerHTML = ''; // Clear existing rows
 
-                const groupedOrders = {};
-                data.buy_orders.forEach(order => {
-                    if (!groupedOrders[order.price]) {
-                        groupedOrders[order.price] = { disclosed: 0, is_matched: order.is_matched };
-                    }
-                    groupedOrders[order.price].disclosed += order.disclosed;
-                });
+                    // Group orders by price
+                    const groupedOrders = {};
+                    data.buy_orders.forEach(order => {
+                        if (!groupedOrders[order.price]) {
+                            groupedOrders[order.price] = { disclosed: 0, is_matched: order.is_matched };
+                        }
+                        groupedOrders[order.price].disclosed += order.disclosed;
+                    });
 
-                const sortedOrders = Object.entries(groupedOrders).sort((a, b) => {
-                    const priceA = parseFloat(a[0]);
-                    const priceB = parseFloat(b[0]);
-                    return priceB - priceA;
-                });
+                    // Convert grouped orders into an array and sort
+                    const sortedOrders = Object.entries(groupedOrders).sort((a, b) => {
+                        const priceA = parseFloat(a[0]);
+                        const priceB = parseFloat(b[0]);
+                        return priceB - priceA; // Higher price first
+                    });
 
-                sortedOrders.forEach(([price, details]) => {
-                    const row = `
-                        <tr>
-                            <td>${price}</td>
-                            <td>${details.disclosed}</td>
-                            <td>${details.is_matched ? 'Matched' : 'Unmatched'}</td>
-                            <td>
-                                <a href="{% url 'modify_page' %}" class="btn">Modify</a>
-                            </td>
-                        </tr>`;
-                    tableBody.innerHTML += row;
-                });
-            })
-            .catch(error => console.error('Error fetching Buy Orders:', error));
-    }
+                    // Populate the table with grouped and sorted orders
+                    sortedOrders.forEach(([price, details]) => {
+                        const row = `
+                            <tr>
+                                <td>${price}</td>
+                                <td>${details.disclosed}</td>
+                                <td>${details.is_matched ? 'Matched' : 'Unmatched'}</td>
+                                <td>
+                                    <a href="{% url 'modify_page' %}" class="btn btn-primary btn-sm">Modify</a>
+                                </td>
+                            </tr>`;
+                        tableBody.innerHTML += row;
+                    });
+                })
+                .catch(error => console.error('Error fetching Buy Orders:', error));
+        }
 
-    function updateSellOrders() {
-        fetch('/orderbook/get_sell_orders/')
-            .then(response => response.json())
-            .then(data => {
-                const tableBody = document.querySelector('#sell-orders tbody');
-                tableBody.innerHTML = '';
+        function updateSellOrders() {
+            fetch('get_sell_orders/') // URL for fetching Sell Orders
+                .then(response => response.json())
+                .then(data => {
+                    console.log('Fetched Data:', data); // Debugging line to check the data
 
-                const groupedOrders = {};
-                data.sell_orders.forEach(order => {
-                    const disclosed = parseFloat(order.disclosed);
-                    const price = parseFloat(order.price);
-                    if (isNaN(disclosed) || isNaN(price)) {
-                        return;
-                    }
+                    const tableBody = document.querySelector('#sell-orders tbody');
+                    tableBody.innerHTML = ''; // Clear existing rows
 
-                    if (!groupedOrders[price]) {
-                        groupedOrders[price] = { disclosed: 0, is_matched: order.is_matched };
-                    }
-                    groupedOrders[price].disclosed += disclosed;
-                });
+                    // Group orders by price
+                    const groupedOrders = {};
+                    data.sell_orders.forEach(order => {
+                        console.log('Processing Order:', order); // Debugging line to check individual order data
 
-                const sortedOrders = Object.entries(groupedOrders).sort((a, b) => {
-                    const priceA = parseFloat(a[0]);
-                    const priceB = parseFloat(b[0]);
-                    return priceA - priceB;
-                });
+                        // Ensure disclosed and price are numbers
+                        const disclosed = parseFloat(order.disclosed);
+                        const price = parseFloat(order.price);
 
-                sortedOrders.forEach(([price, details]) => {
-                    const row = `
-                        <tr>
-                            <td>${price}</td>
-                            <td>${details.disclosed}</td>
-                            <td>${details.is_matched ? 'Matched' : 'Unmatched'}</td>
-                            <td>
-                                <a href="{% url 'modify_page' %}" class="btn">Modify</a>
-                            </td>
-                        </tr>`;
-                    tableBody.innerHTML += row;
-                });
-            })
-            .catch(error => console.error('Error fetching Sell Orders:', error));
-    }
+                        // Check if values are valid numbers
+                        if (isNaN(disclosed) || isNaN(price)) {
+                            console.warn('Invalid data for order:', order); // Log any invalid data
+                            return;
+                        }
 
-    document.addEventListener('DOMContentLoaded', function () {
-        updateBuyOrders();
-        updateSellOrders();
-        setInterval(() => {
-            updateBuyOrders();
-            updateSellOrders();
-        }, 3000);
-    });
-</script>
-{% endblock %}
+                        if (!groupedOrders[price]) {
+                            groupedOrders[price] = { disclosed: 0, is_matched: order.is_matched };
+                        }
+                        groupedOrders[price].disclosed += disclosed; // Use disclosed
+                    });
+
+                    // Convert grouped orders into an array and sort
+                    const sortedOrders = Object.entries(groupedOrders).sort((a, b) => {
+                        const priceA = parseFloat(a[0]);
+                        const priceB = parseFloat(b[0]);
+                        return priceA - priceB; // Lower price first
+                    });
+
+                    // Populate the table with grouped and sorted orders
+                    sortedOrders.forEach(([price, details]) => {
+                        const row = `
+                            <tr>
+                                <td>${price}</td>
+                                <td>${details.disclosed}</td>
+                                <td>${details.is_matched ? 'Matched' : 'Unmatched'}</td>
+                                <td>
+                                    <a href="{% url 'modify_page' %}" class="btn btn-primary btn-sm">Modify</a>
+                                </td>
+                            </tr>`;
+                        tableBody.innerHTML += row;
+                    });
+                })
+                .catch(error => console.error('Error fetching Sell Orders:', error));
+        }
+
+
+
+        // Periodic updates for all tables
+        document.addEventListener('DOMContentLoaded', function () {
+            setInterval(() => {
+                updateBuyOrders();
+                updateSellOrders();
+                updateRecentTrades();
+                updateBestBid();
+                updateBestAsk();
+            }, 3000);  // Update every 3 second
+        });
+    </script>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.0.5/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</body>
+</html>
+
 
 

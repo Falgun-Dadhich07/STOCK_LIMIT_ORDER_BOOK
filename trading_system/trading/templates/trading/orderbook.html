@@ -1,355 +1,409 @@
-{% extends 'trading/base.html' %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Orderbook Dashboard</title>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    /* Reset & Variables */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    :root {
+      --bg-color: #0f0f0f;
+      --card-bg: rgba(30, 30, 30, 0.8);
+      --card-border: rgba(255, 255, 255, 0.1);
+      --neon: #0ff;
+      --accent: #ff0;
+      --text-color: #e0e0e0;
+      --highlight-color: #0ff;
+    }
+    /* Background & Typography */
+    body {
+      background: linear-gradient(45deg, #000, #1a1a1a, #000);
+      background-size: 400% 400%;
+      animation: gradientBG 15s ease infinite;
+      color: var(--text-color);
+      font-family: 'Orbitron', sans-serif;
+      min-height: 100vh;
+      padding: 20px;
+    }
+    @keyframes gradientBG {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+    /* Container */
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      animation: fadeIn 1s ease-in-out;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    /* Dashboard Title */
+    .dashboard-title {
+      text-align: center;
+      margin-bottom: 40px;
+      color: var(--highlight-color);
+      font-size: 2.5rem;
+    }
+    /* Card Style */
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      padding: 20px;
+      margin-bottom: 20px;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    .card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0px 10px 20px rgba(0, 0, 0, 0.2);
+    }
+    .card h4 {
+      color: var(--highlight-color);
+      margin-bottom: 10px;
+    }
+    /* Table Styling */
+    .table-responsive {
+      overflow-x: auto;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: var(--card-bg);
+      border-radius: 10px;
+      margin-bottom: 20px;
+    }
+    table th, table td {
+      padding: 12px 15px;
+      text-align: center;
+      border: 1px solid var(--card-border);
+    }
+    table th {
+      background: rgba(0, 0, 0, 0.3);
+      color: var(--highlight-color);
+    }
+    table tbody tr:hover {
+      background: rgba(0,255,255,0.1);
+    }
+    /* Section Headings */
+    h3 {
+      color: var(--highlight-color);
+      margin: 20px 0;
+      text-align: center;
+    }
+    /* Alert Messages */
+    .alert {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 20px;
+      box-shadow: 0px 10px 20px rgba(0, 0, 0, 0.2);
+    }
+    .alert-success {
+      border-left: 4px solid var(--highlight-color);
+    }
+    .alert-warning {
+      border-left: 4px solid #f39c12;
+    }
+    /* Responsive Grid Layout */
+    .row {
+      display: flex;
+      flex-wrap: wrap;
+      margin: 0 -10px;
+    }
+    .col {
+      flex: 1;
+      padding: 0 10px;
+      min-width: 300px;
+    }
 
-{% block title %}Orderbook Dashboard - NeoTrade{% endblock %}
+    .table-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
 
-{% block content %}
-<style>
-  .container {
-    max-width: 1400px;
-    margin: 0 auto;
-    animation: fadeIn 0.8s ease-in-out;
-  }
-  @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-  .dashboard-title {
-    text-align: center;
-    margin-bottom: 32px;
-    color: var(--accent);
-    font-size: 2.2rem;
-  }
-  .card {
-    background: var(--panel);
-    border: 1px solid var(--panel-border);
-    border-radius: 16px;
-    padding: 20px;
-    margin-bottom: 20px;
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-  }
-  .card:hover {
-    transform: translateY(-4px);
-    box-shadow: 0px 14px 26px rgba(0, 0, 0, 0.2);
-  }
-  .card h4 {
-    color: var(--accent);
-    margin-bottom: 10px;
-  }
-  .table-responsive {
-    overflow-x: auto;
-  }
-  table {
-    width: 100%;
-    border-collapse: collapse;
-    background: rgba(10, 14, 20, 0.5);
-    border-radius: 10px;
-    margin-bottom: 20px;
-  }
-  table th, table td {
-    padding: 12px 15px;
-    text-align: center;
-    border: 1px solid rgba(255, 255, 255, 0.06);
-  }
-  table th {
-    background: rgba(10, 14, 20, 0.7);
-    color: var(--accent);
-  }
-  table tbody tr:hover {
-    background: rgba(94, 242, 194, 0.08);
-  }
-  h3 {
-    color: var(--accent);
-    margin: 20px 0;
-    text-align: center;
-  }
-  .row {
-    display: flex;
-    flex-wrap: wrap;
-    margin: 0 -10px;
-  }
-  .col {
-    flex: 1;
-    padding: 0 10px;
-    min-width: 300px;
-  }
-  .table-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 8px;
-  }
-  .table-header button {
-    padding: 6px 12px;
-    background-color: #1a3a4a;
-    border: 1px solid rgba(94, 242, 194, 0.4);
-    color: var(--text);
-    font-size: 14px;
-    border-radius: 6px;
-    cursor: pointer;
-    transition: background-color 0.2s ease-in-out;
-  }
-  .table-header button:hover {
-    background-color: rgba(94, 242, 194, 0.2);
-  }
-</style>
+.table-header button {
+  padding: 6px 12px;
+  background-color: #007bff;
+  border: none;
+  color: white;
+  font-size: 14px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.2s ease-in-out;
+}
 
-<div class="container">
-  <h2 class="dashboard-title">Orderbook Dashboard</h2>
+.table-header button:hover {
+  background-color: #0056b3;
+}
 
-  <div class="row">
-    <div class="col">
-      <div class="card">
-        <h4>Best Bid</h4>
-        <p id="best-bid">Waiting for update...</p>
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2 class="dashboard-title">Orderbook Dashboard</h2>
+
+    <!-- Best Bid and Best Ask Cards -->
+    <div class="row">
+      <div class="col">
+        <div class="card">
+          <h4>Best Bid</h4>
+          <p id="best-bid">Waiting for update...</p>
+        </div>
+      </div>
+      <div class="col">
+        <div class="card">
+          <h4>Best Ask</h4>
+          <p id="best-ask">Waiting for update...</p>
+        </div>
       </div>
     </div>
-    <div class="col">
-      <div class="card">
-        <h4>Best Ask</h4>
-        <p id="best-ask">Waiting for update...</p>
-      </div>
-    </div>
-  </div>
 
-  <div class="row">
-    <div class="col">
-      <div class="table-responsive">
-        <table id="buy-orders">
-          <div class="table-header">
-            <h3>Buy Orders</h3>
-            <button onclick="downloadBuyOrdersCSV()">Download CSV</button>
-          </div>
-          <thead>
-            <tr><th>Price</th><th>Quantity</th></tr>
-          </thead>
-          <tbody><tr><td colspan="2">Waiting for update...</td></tr></tbody>
-        </table>
+    <!-- Buy and Sell Orders -->
+    <div class="row">
+      <div class="col">
+        <div class="table-responsive">
+          <table id="buy-orders">
+            <div class="table-header">
+              <h3>Buy Orders</h3>
+              <button onclick="downloadBuyOrdersCSV()">⬇ Download CSV</button>
+            </div>
+            
+            <thead>
+              <tr><th>Price</th><th>Quantity</th></tr>
+            </thead>
+            <tbody><tr><td colspan="2">Waiting for update...</td></tr></tbody>
+          </table>
+        </div>
       </div>
-    </div>
-    <div class="col">
-      <div class="table-header">
-        <h3>Sell Orders</h3>
-        <button onclick="downloadSellOrdersCSV()">Download CSV</button>
-      </div>
-      <div class="table-responsive">
-        <table id="sell-orders">
-          <thead>
-            <tr><th>Price</th><th>Quantity</th></tr>
-          </thead>
-          <tbody><tr><td colspan="2">Waiting for update...</td></tr></tbody>
-        </table>
-      </div>
-    </div>
-  </div>
+      <div class="col">
 
-  <div id="order-modal" style="
-    display: none;
-    position: fixed;
-    top: 0; left: 0;
-    width: 100%; height: 100%;
-    background: rgba(0,0,0,0.5);
-    align-items: center; justify-content: center;
-  ">
-    <div style="
-      background: #111;
-      padding: 1rem;
-      border-radius: 8px;
-      max-width: 90%;
-      max-height: 90%;
-      overflow: auto;
-      color: #fff;
-    ">
-      <button id="modal-close" style="
-        float: right;
-        background: none;
-        border: none;
-        color: #aaa;
-        font-size: 1.5rem;
-        cursor: pointer;
-      ">&times;</button>
-      <h4>Order Details at <span id="modal-price"></span></h4>
-      <table id="modal-table" style="width:100%; border-collapse: collapse;">
-        <thead>
-          <tr>
-            <th>User</th>
-            <th>Quantity</th>
-            <th>Disclosed</th>
-            <th>Original_quantity</th>
-          </tr>
-        </thead>
-        <tbody></tbody>
-      </table>
+        <div class="table-header">
+          <h3>Sell Orders</h3>
+          <button onclick="downloadSellOrdersCSV()">⬇ Download CSV</button>
+        </div>
+        <div class="table-responsive">
+          <table id="sell-orders">
+            <thead>
+              <tr><th>Price</th><th>Quantity</th></tr>
+            </thead>
+            <tbody><tr><td colspan="2">Waiting for update...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
     </div>
-  </div>
 
-  <div class="row">
-    <div class="col" style="flex: 100%;">
-      <div class="table-header">
-        <h3>Recent Trades</h3>
-        <button onclick="downloadTradesCSV()">Download CSV</button>
-      </div>
-      <div class="table-responsive">
-        <table id="trades">
-          <thead>
-            <tr>
-              <th>Buyer</th><th>Seller</th><th>Price</th><th>Quantity</th><th>Timestamp</th>
-            </tr>
-          </thead>
-          <tbody><tr><td colspan="5">Waiting for update...</td></tr></tbody>
-        </table>
-      </div>
-    </div>
-  </div>
+    
+    
+    
+
+
+    <!-- Order Details Modal -->
+<div id="order-modal" style="
+display: none;
+position: fixed;
+top: 0; left: 0;
+width: 100%; height: 100%;
+background: rgba(0,0,0,0.5);
+align-items: center; justify-content: center;
+">
+<div style="
+  background: #111;
+  padding: 1rem;
+  border-radius: 8px;
+  max-width: 90%;
+  max-height: 90%;
+  overflow: auto;
+  color: #fff;
+">
+<button id="modal-close" style="
+ float: right;
+ background: none;
+ border: none;
+ color: #aaa;
+ font-size: 1.5rem;
+ cursor: pointer;
+">&times;</button>
+<h4>Order Details at <span id="modal-price"></span></h4>
+<table id="modal-table" style="width:100%; border-collapse: collapse;">
+ <thead>
+   <tr>
+     <th>User</th>
+     <th>Quantity</th>
+     <th>Disclosed</th>
+     <th>Original_quantity</th>
+   </tr>
+ </thead>
+ <tbody></tbody>
+</table>
 </div>
-{% endblock %}
+</div>
 
-{% block scripts %}
-<script>
-  function updateBestBid() {
-    fetch('/orderbook/get_best_bid/')
-      .then(response => response.json())
-      .then(data => {
-        const bestBidContainer = document.querySelector('#best-bid');
-        if (data.best_bid && data.best_bid.price !== null) {
-          bestBidContainer.innerHTML = `Price: ${data.best_bid.price} | Quantity: ${data.best_bid.disclosed}`;
-        } else {
-          bestBidContainer.innerHTML = 'No bids available';
-        }
-      })
-      .catch(error => console.error('Error fetching Best Bid:', error));
-  }
 
-  function updateBestAsk() {
-    fetch('/orderbook/get_best_ask/')
-      .then(response => response.json())
-      .then(data => {
-        const bestAskContainer = document.querySelector('#best-ask');
-        if (data.best_ask && data.best_ask.price !== null) {
-          bestAskContainer.innerHTML = `Price: ${data.best_ask.price} | Quantity: ${data.best_ask.disclosed}`;
-        } else {
-          bestAskContainer.innerHTML = 'No asks available';
-        }
-      })
-      .catch(error => console.error('Error fetching Best Ask:', error));
-  }
+    <!-- Recent Trades -->
+    <div class="row">
+      <div class="col" style="flex: 100%;">
+        <div class="table-header">
+          <h3>Recent Trades</h3>
+          <button onclick="downloadTradesCSV()">⬇ Download csv</button>
+        </div>
+        
+        <div class="table-responsive">
+          <table id="trades">
+            <thead>
+              <tr>
+                <th>Buyer</th><th>Seller</th><th>Price</th><th>Quantity</th><th>Timestamp</th>
+              </tr>
+            </thead>
+            <tbody><tr><td colspan="5">Waiting for update...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
 
-  function downloadBuyOrdersCSV() {
-    fetch('/orderbook/get_buy_orders/')
-      .then(response => response.json())
-      .then(data => {
-        const buyOrders = data.buy_orders;
-        const headers = ["price", "quantity", "disclosed", "user", "original_quantity"];
-        const rows = buyOrders.map(order => headers.map(h => {
-          let val = order[h];
-          return `"${(val ?? "").toString().replace(/"/g, '""')}"`;
-        }).join(','));
+  <!-- WebSocket Connection -->
+  <script>
+    function updateBestBid() {
+      fetch('get_best_bid/')
+        .then(response => response.json())
+        .then(data => {
+          const bestBidContainer = document.querySelector('#best-bid');
+          if (data.best_bid && data.best_bid.price !== null) {
+            bestBidContainer.innerHTML = `Price: ${data.best_bid.price} | Quantity: ${data.best_bid.disclosed}`;
+          } else {
+            bestBidContainer.innerHTML = 'No bids available';
+          }
+        })
+        .catch(error => console.error('Error fetching Best Bid:', error));
+    }
 
-        const csv = [headers.join(','), ...rows].join('\r\n');
-        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = 'buy_orders.csv';
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-      })
-      .catch(err => console.error('Error generating CSV:', err));
-  }
+    function updateBestAsk() {
+      fetch('get_best_ask/')
+        .then(response => response.json())
+        .then(data => {
+          const bestAskContainer = document.querySelector('#best-ask');
+          if (data.best_ask && data.best_ask.price !== null) {
+            bestAskContainer.innerHTML = `Price: ${data.best_ask.price} | Quantity: ${data.best_ask.disclosed}`;
+          } else {
+            bestAskContainer.innerHTML = 'No asks available';
+          }
+        })
+        .catch(error => console.error('Error fetching Best Ask:', error));
+    }
 
-  function downloadSellOrdersCSV() {
-    fetch('/orderbook/get_sell_orders/')
-      .then(response => response.json())
-      .then(data => {
-        const sellOrders = data.sell_orders;
-        const headers = ["price", "quantity", "disclosed", "user", "original_quantity"];
-        const rows = sellOrders.map(order => headers.map(h => {
-          let val = order[h];
-          return `"${(val ?? "").toString().replace(/"/g, '""')}"`;
-        }).join(','));
+function downloadBuyOrdersCSV() {
+  fetch('get_buy_orders/')
+    .then(response => response.json())
+    .then(data => {
+      const buyOrders = data.buy_orders;
+      const headers = ["price", "quantity", "disclosed", "user", "original_quantity"];
+      const rows = buyOrders.map(order => headers.map(h => {
+        let val = order[h];
+        return `"${(val ?? "").toString().replace(/"/g, '""')}"`;
+      }).join(','));
 
-        const csv = [headers.join(','), ...rows].join('\r\n');
-        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = 'sell_orders.csv';
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-      })
-      .catch(err => console.error('Error generating CSV:', err));
-  }
+      const csv = [headers.join(','), ...rows].join('\r\n');
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'buy_orders.csv';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    })
+    .catch(err => console.error('Error generating CSV:', err));
+}
 
-  function downloadTradesCSV() {
-    fetch('/orderbook/get_recent_trades/')
-      .then(response => response.json())
-      .then(data => {
-        const trades = data.trades;
-        const headers = ["buyer", "seller", "price", "quantity", "timestamp"];
-        const rows = trades.map(trade => headers.map(h => {
-          let val = trade[h];
-          return `"${(val ?? "").toString().replace(/"/g, '""')}"`;
-        }).join(','));
+function downloadSellOrdersCSV() {
+  fetch('get_sell_orders/')
+    .then(response => response.json())
+    .then(data => {
+      const sellOrders = data.sell_orders;
+      const headers = ["price", "quantity", "disclosed", "user", "original_quantity"];
+      const rows = sellOrders.map(order => headers.map(h => {
+        let val = order[h];
+        return `"${(val ?? "").toString().replace(/"/g, '""')}"`;
+      }).join(','));
 
-        const csv = [headers.join(','), ...rows].join('\r\n');
-        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = 'trades.csv';
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-      })
-      .catch(err => console.error('Error generating CSV:', err));
-  }
+      const csv = [headers.join(','), ...rows].join('\r\n');
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'sell_orders.csv';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    })
+    .catch(err => console.error('Error generating CSV:', err));
+}
 
-  let buyOrdersByPrice = {};
 
-  function updateBuyOrders() {
-    fetch('/orderbook/get_buy_orders/')
-      .then(r => r.json())
-      .then(data => {
-        const tbody = document.querySelector('#buy-orders tbody');
-        tbody.innerHTML = '';
-        buyOrdersByPrice = {};
 
-        const grouped = {};
-        data.buy_orders
-          .filter(o => !o.is_ioc)
-          .forEach(o => {
-            const price = parseFloat(o.price).toFixed(2);
-            const qty   = parseFloat(o.quantity)  || 0;
-            const disc  = parseFloat(o.disclosed) || 0;
+let buyOrdersByPrice = {};
 
-            if (!grouped[price]) grouped[price] = { quantity: 0, disclosed: 0 };
-            grouped[price].quantity  += qty;
-            grouped[price].disclosed += disc;
+// call this once on page load (or whenever you need)
+function updateBuyOrders() {
+  fetch('get_buy_orders/')
+    .then(r => r.json())
+    .then(data => {
+      const tbody = document.querySelector('#buy-orders tbody');
+      tbody.innerHTML = '';
+      buyOrdersByPrice = {};
 
-            if (!buyOrdersByPrice[price]) buyOrdersByPrice[price] = [];
-            buyOrdersByPrice[price].push(o);
-          });
+      // 1. group & stash raw orders
+      const grouped = {};
+      data.buy_orders
+        .filter(o => !o.is_ioc)
+        .forEach(o => {
+          const price = parseFloat(o.price).toFixed(2);
+          const qty   = parseFloat(o.quantity)  || 0;
+          const disc  = parseFloat(o.disclosed) || 0;
 
-        Object.entries(grouped)
-          .sort((a,b) => parseFloat(b[0]) - parseFloat(a[0]))
-          .forEach(([price, {quantity, disclosed}]) => {
-            const tr = document.createElement('tr');
-            tr.style.cursor = 'pointer';
-            tr.innerHTML = `
-              <td>${price}</td>
-              <td>${quantity}</td>
-              <td>${disclosed}</td>
-            `;
-            tr.addEventListener('click', () => showOrderDetails(price, 'buy'));
-            tbody.appendChild(tr);
-          });
-      });
-  }
-  function showOrderDetails(price, side) {
+          // grouping sums
+          if (!grouped[price]) grouped[price] = { quantity: 0, disclosed: 0 };
+          grouped[price].quantity  += qty;
+          grouped[price].disclosed += disc;
+
+          // keep list of raw orders
+          if (!buyOrdersByPrice[price]) buyOrdersByPrice[price] = [];
+          buyOrdersByPrice[price].push(o);
+        });
+
+      // 2. render rows & attach click
+      Object.entries(grouped)
+        .sort((a,b) => parseFloat(b[0]) - parseFloat(a[0]))
+        .forEach(([price, {quantity, disclosed}]) => {
+          const tr = document.createElement('tr');
+          tr.style.cursor = 'pointer';
+          tr.innerHTML = `
+            <td>${price}</td>
+            <td>${quantity}</td>
+            <td>${disclosed}</td>
+          `;
+          tr.addEventListener('click', () => showOrderDetails(price, 'buy'));
+          tbody.appendChild(tr);
+        });
+    })
+    .catch(console.error);
+}
+
+function showOrderDetails(price, side) {
   // pick the right map
   const map = side === 'sell'
     ? sellOrdersByPrice
@@ -376,146 +430,166 @@
   });
 
   modal.style.display = 'flex';
-  }
+}
 
-  document.getElementById('modal-close')
-    .addEventListener('click', () => {
-      document.getElementById('order-modal').style.display = 'none';
+// close button
+document.getElementById('modal-close')
+        .addEventListener('click', () => {
+  document.getElementById('order-modal').style.display = 'none';
+});
+
+
+
+let sellOrdersByPrice = {};
+function updateSellOrders() {
+  fetch('get_sell_orders/')
+    .then(r => r.json())
+    .then(data => {
+      const tbody = document.querySelector('#sell-orders tbody');
+      tbody.innerHTML = '';
+      sellOrdersByPrice = {};
+
+      // 1) Group & store raw:
+      const grouped = {};
+      data.sell_orders
+        .filter(o => !o.is_ioc)
+        .forEach(o => {
+          const price     = parseFloat(o.price).toFixed(2);
+          const qty       = parseFloat(o.quantity)  || 0;
+          const disclosed = parseFloat(o.disclosed) || 0;
+
+          // sums for the row
+          if (!grouped[price]) grouped[price] = { quantity: 0, disclosed: 0 };
+          grouped[price].quantity  += qty;
+          grouped[price].disclosed += disclosed;
+
+          // stash raw for modal
+          if (!sellOrdersByPrice[price]) sellOrdersByPrice[price] = [];
+          sellOrdersByPrice[price].push(o);
+        });
+
+      // 2) Render sorted rows (lowest price first)
+      Object.entries(grouped)
+        .sort((a, b) => parseFloat(a[0]) - parseFloat(b[0]))
+        .forEach(([price, { quantity, disclosed }]) => {
+          const tr = document.createElement('tr');
+          tr.style.cursor = 'pointer';
+          tr.innerHTML = `
+            <td>${price}</td>
+            <td>${quantity}</td>
+            <td>${disclosed}</td>
+          `;
+          // wire up click to reuse the same modal:
+          tr.addEventListener('click', () => showOrderDetails(price, 'sell'));
+          tbody.appendChild(tr);
+        });
+    })
+    .catch(console.error);
+}
+
+
+
+
+    function updateRecentTrades() {
+      fetch('get_recent_trades/')
+        .then(response => response.json())
+        .then(data => {
+          const tableBody = document.querySelector('#trades tbody');
+          tableBody.innerHTML = '';
+          data.trades.forEach(trade => {
+            const row = `
+              <tr>
+                <td>${trade.buyer}</td>
+                <td>${trade.seller}</td>
+                <td>${trade.price}</td>
+                <td>${trade.quantity}</td>
+                <td>${trade.timestamp}</td>
+              </tr>`;
+            tableBody.innerHTML += row;
+          });
+        })
+        .catch(error => console.error('Error fetching Recent Trades:', error));
+    }
+
+    document.addEventListener('DOMContentLoaded', function (){
+      updateBuyOrders();
+      updateSellOrders();
+      updateRecentTrades();
+      updateBestBid();
+      updateBestAsk();
     });
-
-  let sellOrdersByPrice = {};
-  function updateSellOrders() {
-    fetch('/orderbook/get_sell_orders/')
-      .then(r => r.json())
-      .then(data => {
-        const tbody = document.querySelector('#sell-orders tbody');
-        tbody.innerHTML = '';
-        sellOrdersByPrice = {};
-
-        const grouped = {};
-        data.sell_orders
-          .filter(o => !o.is_ioc)
-          .forEach(o => {
-            const price     = parseFloat(o.price).toFixed(2);
-            const qty       = parseFloat(o.quantity)  || 0;
-            const disclosed = parseFloat(o.disclosed) || 0;
-
-            if (!grouped[price]) grouped[price] = { quantity: 0, disclosed: 0 };
-            grouped[price].quantity  += qty;
-            grouped[price].disclosed += disclosed;
-
-            if (!sellOrdersByPrice[price]) sellOrdersByPrice[price] = [];
-            sellOrdersByPrice[price].push(o);
-          });
-
-        Object.entries(grouped)
-          .sort((a, b) => parseFloat(a[0]) - parseFloat(b[0]))
-          .forEach(([price, { quantity, disclosed }]) => {
-            const tr = document.createElement('tr');
-            tr.style.cursor = 'pointer';
-            tr.innerHTML = `
-              <td>${price}</td>
-              <td>${quantity}</td>
-              <td>${disclosed}</td>
-            `;
-            tr.addEventListener('click', () => showOrderDetails(price, 'sell'));
-            tbody.appendChild(tr);
-          });
-      })
-      .catch(console.error);
-  }
-
-  function updateRecentTrades() {
-    fetch('/orderbook/get_recent_trades/')
-      .then(response => response.json())
-      .then(data => {
-        const tableBody = document.querySelector('#trades tbody');
-        tableBody.innerHTML = '';
+    const ws_scheme = window.location.protocol === "https:" ? "wss" : "ws";
+    const socket = new WebSocket(`${ws_scheme}://${window.location.host}/ws/orderbook/`);
+  
+    socket.onopen = () => {
+      console.log("WebSocket connection established");
+    };
+  
+    socket.onmessage = (event) => {
+      const raw = JSON.parse(event.data);
+      const data = raw.data || raw;  // Extract the actual payload (for both snapshot or update)
+  
+      // Debug
+      console.log("Received WebSocket data:", raw);
+  
+      // Hide "Waiting for update..." if you have it
+      const statusEl = document.getElementById("status");
+      if (statusEl) statusEl.innerText = "Live";
+  
+      // Update best bid
+      if (data.best_bid) {
+        document.getElementById("best-bid").innerText = `Price: ${data.best_bid.price} | Quantity: ${data.best_bid.disclosed}`;
+      }
+  
+      // Update best ask
+      if (data.best_ask) {
+        document.getElementById("best-ask").innerText = `Price: ${data.best_ask.price} | Quantity: ${data.best_ask.disclosed}`;
+      }
+  
+      // Update buy orders table
+      if (data.buy_orders) {
+        const buyOrdersTable = document.querySelector("#buy-orders tbody");
+        buyOrdersTable.innerHTML = "";
+        data.buy_orders.forEach(order => {
+          buyOrdersTable.innerHTML += `<tr><td>${order.price}</td><td>${order.disclosed}</td></tr>`;
+        });
+      }
+  
+      // Update sell orders table
+      if (data.sell_orders) {
+        const sellOrdersTable = document.querySelector("#sell-orders tbody");
+        sellOrdersTable.innerHTML = "";
+        data.sell_orders.forEach(order => {
+          sellOrdersTable.innerHTML += `<tr><td>${order.price}</td><td>${order.disclosed}</td></tr>`;
+        });
+      }
+  
+      // Update trades table
+      if (data.trades) {
+        const tradesTable = document.querySelector("#trades tbody");
+        tradesTable.innerHTML = "";
         data.trades.forEach(trade => {
-          const row = `
+          tradesTable.innerHTML += `
             <tr>
               <td>${trade.buyer}</td>
               <td>${trade.seller}</td>
               <td>${trade.price}</td>
               <td>${trade.quantity}</td>
-              <td>${trade.timestamp}</td>
+              <td>${trade.timestamp || '-'}</td>
             </tr>`;
-          tableBody.innerHTML += row;
         });
-      })
-      .catch(error => console.error('Error fetching Recent Trades:', error));
-  }
-
-  document.addEventListener('DOMContentLoaded', function (){
-    updateBuyOrders();
-    updateSellOrders();
-    updateRecentTrades();
-    updateBestBid();
-    updateBestAsk();
-  });
-
-  const ws_scheme = window.location.protocol === "https:" ? "wss" : "ws";
-  const socket = new WebSocket(`${ws_scheme}://${window.location.host}/ws/orderbook/`);
-
-  socket.onopen = () => {
-    console.log("WebSocket connection established");
-  };
-
-  socket.onmessage = (event) => {
-    const raw = JSON.parse(event.data);
-    const data = raw.data || raw;
-
-    const statusEl = document.getElementById("status");
-    if (statusEl) statusEl.innerText = "Live";
-
-    if (data.best_bid) {
-      document.getElementById("best-bid").innerText = `Price: ${data.best_bid.price} | Quantity: ${data.best_bid.disclosed}`;
-    }
-
-    if (data.best_ask) {
-      document.getElementById("best-ask").innerText = `Price: ${data.best_ask.price} | Quantity: ${data.best_ask.disclosed}`;
-    }
-
-    if (data.buy_orders) {
-      const buyOrdersTable = document.querySelector("#buy-orders tbody");
-      buyOrdersTable.innerHTML = "";
-      data.buy_orders.forEach(order => {
-        buyOrdersTable.innerHTML += `<tr><td>${order.price}</td><td>${order.disclosed}</td></tr>`;
-      });
-    }
-
-    if (data.sell_orders) {
-      const sellOrdersTable = document.querySelector("#sell-orders tbody");
-      sellOrdersTable.innerHTML = "";
-      data.sell_orders.forEach(order => {
-        sellOrdersTable.innerHTML += `<tr><td>${order.price}</td><td>${order.disclosed}</td></tr>`;
-      });
-    }
-
-    if (data.trades) {
-      const tradesTable = document.querySelector("#trades tbody");
-      tradesTable.innerHTML = "";
-      data.trades.forEach(trade => {
-        tradesTable.innerHTML += `
-          <tr>
-            <td>${trade.buyer}</td>
-            <td>${trade.seller}</td>
-            <td>${trade.price}</td>
-            <td>${trade.quantity}</td>
-            <td>${trade.timestamp || '-'}</td>
-          </tr>`;
-      });
-    }
-  };
-
-  socket.onerror = (error) => {
-    console.log("WebSocket Error: ", error);
-  };
-
-  socket.onclose = (event) => {
-    console.log("WebSocket connection closed: ", event);
-    const statusEl = document.getElementById("status");
-    if (statusEl) statusEl.innerText = "Disconnected";
-  };
-</script>
-{% endblock %}
+      }
+    };
+  
+    socket.onerror = (error) => {
+      console.log("WebSocket Error: ", error);
+    };
+  
+    socket.onclose = (event) => {
+      console.log("WebSocket connection closed: ", event);
+      const statusEl = document.getElementById("status");
+      if (statusEl) statusEl.innerText = "Disconnected";
+    };
+  </script>  
+</body>
+</html>

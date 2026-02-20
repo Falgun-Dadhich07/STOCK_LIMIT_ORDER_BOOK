@@ -1,102 +1,202 @@
-{% extends 'trading/base.html' %}
-
-{% block title %}Modify Order - NeoTrade{% endblock %}
-
-{% block content %}
-<style>
-  .container {
-    max-width: 680px;
-    width: 100%;
-    margin: 0 auto;
-    animation: fadeIn 0.8s ease-in-out;
-  }
-  @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-  .dashboard-title {
-    text-align: center;
-    margin-bottom: 24px;
-    color: var(--accent);
-    font-size: 2rem;
-  }
-</style>
-
-<div class="container">
-  <h2 class="dashboard-title">Modify Order</h2>
-  <div class="card">
-    <h4 class="text-center" style="margin-bottom: 16px;">Edit Order Quantity</h4>
-    <form id="modify-order-form">
-      <div class="form-group">
-        <label for="order-id">Order ID</label>
-        <input type="number" class="form-control" id="order-id" name="order-id" required>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Modify Order</title>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    /* Reset */
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    /* Variables */
+    :root {
+      --bg-color: #0f0f0f;
+      --card-bg: rgba(30, 30, 30, 0.8);
+      --card-border: rgba(255, 255, 255, 0.1);
+      --neon: #0ff;
+      --accent: #ff0;
+      --text-color: #e0e0e0;
+    }
+    /* Animated Background & Typography */
+    body {
+      font-family: 'Orbitron', sans-serif;
+      background: linear-gradient(45deg, #000, #1a1a1a, #000);
+      background-size: 400% 400%;
+      animation: gradientBG 15s ease infinite;
+      color: var(--text-color);
+      min-height: 100vh;
+      padding: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    @keyframes gradientBG {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+    /* Container */
+    .container {
+      max-width: 600px;
+      width: 100%;
+      margin: 0 auto;
+      animation: fadeIn 1s ease-in-out;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    /* Card (Glassmorphism) */
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      padding: 40px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.37);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    .card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+    }
+    /* Titles */
+    .dashboard-title {
+      text-align: center;
+      margin-bottom: 30px;
+      color: var(--neon);
+      font-size: 2.5rem;
+    }
+    .card h4 {
+      text-align: center;
+      margin-bottom: 20px;
+      color: var(--neon);
+      font-size: 1.8rem;
+    }
+    /* Form Styling */
+    .form-group {
+      margin-bottom: 20px;
+    }
+    .form-group label {
+      display: block;
+      margin-bottom: 5px;
+      color: var(--neon);
+      font-size: 1rem;
+    }
+    .form-control {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid var(--card-border);
+      border-radius: 8px;
+      background: rgba(0, 0, 0, 0.2);
+      color: var(--text-color);
+      font-size: 1rem;
+      outline: none;
+      transition: border 0.3s ease;
+    }
+    .form-control:focus {
+      border-color: var(--neon);
+    }
+    /* Button */
+    button {
+      width: 100%;
+      padding: 12px;
+      background: linear-gradient(45deg, var(--neon), var(--accent));
+      border: none;
+      border-radius: 8px;
+      color: var(--bg-color);
+      font-size: 1.1rem;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background 0.3s ease, box-shadow 0.3s ease;
+    }
+    button:hover {
+      background: linear-gradient(45deg, var(--accent), var(--neon));
+      box-shadow: 0 4px 10px rgba(0, 255, 255, 0.7);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2 class="dashboard-title">Modify Order</h2>
+    <div class="card">
+      <div class="card-body">
+        <h4>Edit Order Quantity</h4>
+        <form id="modify-order-form">
+          <div class="form-group">
+            <label for="order-id">Order ID</label>
+            <input type="number" class="form-control" id="order-id" name="order-id" required>
+          </div>
+          <div class="form-group">
+            <label for="quantity">Quantity</label>
+            <input type="number" class="form-control" id="quantity" name="quantity" required>
+          </div>
+          <div class="form-group">
+            <label for="disclose">Disclosed Quantity</label>
+            <input type="number" class="form-control" id="disclose" name="disclose" required>
+          </div>
+          <div class="form-group">
+            <label for="price">Price</label>
+            <input type="number" step="0.01" class="form-control" id="price" name="price" required>
+          </div>
+          <button type="submit">Save Changes</button>
+        </form>
       </div>
-      <div class="form-group">
-        <label for="quantity">Quantity</label>
-        <input type="number" class="form-control" id="quantity" name="quantity" required>
-      </div>
-      <div class="form-group">
-        <label for="disclose">Disclosed Quantity</label>
-        <input type="number" class="form-control" id="disclose" name="disclose" required>
-      </div>
-      <div class="form-group">
-        <label for="price">Price</label>
-        <input type="number" step="0.01" class="form-control" id="price" name="price" required>
-      </div>
-      <button type="submit" class="btn" style="width: 100%;">Save Changes</button>
-    </form>
+    </div>
   </div>
-</div>
-{% endblock %}
 
-{% block scripts %}
-<script>
-  document.addEventListener('DOMContentLoaded', function () {
-    const form = document.getElementById('modify-order-form');
+  <!-- Working logic preserved -->
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      const form = document.getElementById('modify-order-form');
 
-    form.addEventListener('submit', function (event) {
-      event.preventDefault();
+      form.addEventListener('submit', function (event) {
+        event.preventDefault();
 
-      const orderId = document.getElementById('order-id').value;
-      const quantity = document.getElementById('quantity').value;
-      const discloseQ = document.getElementById('disclose').value;
-      const price = document.getElementById('price').value;
+        // Get the values from the form inputs
+        const orderId = document.getElementById('order-id').value;
+        const quantity = document.getElementById('quantity').value;
+        const discloseQ = document.getElementById('disclose').value;
+        const price = document.getElementById('price').value;
 
-      if (!orderId || !quantity || !price || isNaN(orderId) || isNaN(quantity) || isNaN(discloseQ) || isNaN(price)) {
-        alert('Please enter valid values for Order ID, Quantity, Disclosed Quantity and Price.');
-        return;
-      }
-
-      const payload = {
-        order_id: parseInt(orderId),
-        quantity: parseInt(quantity),
-        disclosed_quantity: parseInt(discloseQ),
-        price: parseFloat(price)
-      };
-
-      fetch('{% url "update_prev_order" %}', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-CSRFToken': '{{ csrf_token }}'
-        },
-        body: JSON.stringify(payload),
-      })
-      .then(response => response.json())
-      .then(data => {
-        if (data.success) {
-          alert('Order updated successfully!');
-        } else {
-          alert('Error updating order: ' + (data.message || 'Unknown error'));
+        // Check if all values are valid numbers
+        if (!orderId || !quantity || !price || isNaN(orderId) || isNaN(quantity) || isNaN(discloseQ) || isNaN(price)) {
+          alert('Please enter valid values for Order ID, Quantity, Disclosed Quantity and Price.');
+          return;
         }
-      })
-      .catch(error => {
-        console.error('Error:', error);
-        alert('There was an error updating the order.');
+
+        // Create the request payload as JSON
+        const payload = {
+          order_id: parseInt(orderId),
+          quantity: parseInt(quantity),
+          disclosed_quantity: parseInt(discloseQ),
+          price: parseFloat(price)
+        };
+
+        // Send the data via a POST request
+        fetch('/modify_order/update_prev_order/', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': '{{ csrf_token }}',  // Add CSRF token for security
+          },
+          body: JSON.stringify(payload),
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            alert('Order updated successfully!');
+          } else {
+            alert('Error updating order: ' + (data.message || 'Unknown error'));
+          }
+        })
+        .catch(error => {
+          console.error('Error:', error);
+          alert('There was an error updating the order.');
+        });
       });
     });
-  });
-</script>
-{% endblock %}
+  </script>
 </body>
 </html>
