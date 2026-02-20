@@ -33,7 +33,9 @@ EXPOSE ${PORT:-8000}
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
     CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:8000/').read()" || exit 1
 
-# Run migrations, create superuser, then start Daphne
-CMD sh -c "python manage.py migrate && \
-    python manage.py shell -c \"from django.contrib.auth.models import User; User.objects.filter(username='admin').exists() or User.objects.create_superuser('admin', 'falgund24@iitk.ac.in', 'admin123')\" && \
-    daphne -b 0.0.0.0 -p ${PORT:-8000} trading_system.asgi:application"
+# Copy and set entrypoint script
+COPY entrypoint.sh /app/entrypoint.sh
+RUN chmod +x /app/entrypoint.sh
+
+# Start via entrypoint script (runs migrations + creates superuser + starts Daphne)
+CMD ["/app/entrypoint.sh"]
