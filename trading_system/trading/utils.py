@@ -458,18 +458,14 @@ def broadcast_orderbook_update():
     # print("Orderbook updated and broadcasted")
     # # return payload
 
-    buy_orders = Order.objects.filter(
-        order_type='BUY',
-        order_mode='LIMIT',
-        price__isnull=False,
-        is_matched=False,
-    ).order_by('-price')
-    sell_orders = Order.objects.filter(
-        order_type='SELL',
-        order_mode='LIMIT',
-        price__isnull=False,
-        is_matched=False,
-    ).order_by('price')
+    # ==========================================
+    # NEW CODE (Optimized)
+    # ==========================================
+    # print("Broadcasting update...")
+    
+    # OPTIMIZATION: Limit to top 20 orders instead of fetching all
+    buy_orders = Order.objects.filter(order_type='BUY', is_matched=False).order_by('-price')[:20]
+    sell_orders = Order.objects.filter(order_type='SELL', is_matched=False).order_by('price')[:20]
     recent_trades = Trade.objects.order_by('-timestamp')[:10]
 
     best_bid = buy_orders[0] if buy_orders else None
