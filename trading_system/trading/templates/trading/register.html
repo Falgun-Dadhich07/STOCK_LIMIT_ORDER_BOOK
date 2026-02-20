@@ -156,6 +156,14 @@
         <input type="password" name="password2" id="password2" required>
         <label for="password2">Confirm Password</label>
       </div>
+      <div class="input-field">
+        <label for="role" style="position: static; transform: none; display: block; margin-bottom: 8px; color: rgba(255, 255, 255, 0.7);">Role</label>
+        <select name="role" id="role" required style="width: 100%; background: transparent; border: none; color: var(--text-color); font-size: 16px; padding: 6px 0;">
+          <option value="" disabled selected>Select Role</option>
+          <option value="TRADER">Trader</option>
+          <option value="MARKET_MAKER">Market Maker</option>
+        </select>
+      </div>
       <button type="submit">Register</button>
       <div class="login">
         <p>Already have an account? <a href="{% url 'login' %}">Log In</a></p>
