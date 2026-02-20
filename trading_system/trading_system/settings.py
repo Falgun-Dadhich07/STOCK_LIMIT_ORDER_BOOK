@@ -78,7 +78,7 @@ ROOT_URLCONF = "trading_system.urls"
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [os.path.join(BASE_DIR, 'trading/templates'),os.path.join(BASE_DIR, 'trading/templates/trading')],
+        'DIRS': [os.path.join(BASE_DIR, 'trading/templates')],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -150,8 +150,8 @@ STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
-LOGIN_REDIRECT_URL = 'role_router'
-LOGOUT_REDIRECT_URL = 'login'
+LOGIN_REDIRECT_URL = 'home'
+# LOGOUT_REDIRECT_URL = 'login'
 
 CSRF_TRUSTED_ORIGINS = os.environ.get(
     'CSRF_TRUSTED_ORIGINS', 'http://localhost:8000'
