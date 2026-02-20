@@ -5,6 +5,8 @@ from django.contrib import messages
 from django.shortcuts import redirect
 from django.conf import settings
 import logging
+from django.contrib.auth.decorators import login_required
+from trading.models import BaseUser
 
 logger = logging.getLogger(__name__)
 from .forms import UserRegisterForm
@@ -28,7 +30,16 @@ from django.contrib.auth.models import User
 from .forms import CSVUploadForm
 
 
+def _is_admin_user(auth_user):
+    return auth_user.is_superuser
+
+
+@login_required
 def bulk_user_upload(request):
+    if not _is_admin_user(request.user):
+        messages.error(request, 'Admin access required.')
+        return redirect('role_router')
+
     success_count = 0
     error_count = 0
 
@@ -56,7 +67,7 @@ def bulk_user_upload(request):
                         error_count += 1
             
             messages.success(request, f"Users created successfully! and email sent to {success_count} users. and error in {error_count} users")
-            return redirect('home')
+            return redirect('admin_home')
 
     else:
         form = CSVUploadForm()
@@ -107,7 +118,12 @@ from django.shortcuts import render, redirect
 from .forms import UserDeleteCSVForm
 from django.contrib import messages
 
+@login_required
 def bulk_user_delete(request):
+    if not _is_admin_user(request.user):
+        messages.error(request, 'Admin access required.')
+        return redirect('role_router')
+
     if request.method == 'POST':
         form = UserDeleteCSVForm(request.POST, request.FILES)
         if form.is_valid():
@@ -133,7 +149,7 @@ def bulk_user_delete(request):
             if not_found_users:
                 messages.warning(request, f"Users not found: {', '.join(not_found_users)}")
 
-            return redirect('home')
+            return redirect('admin_home')
 
     else:
         form = UserDeleteCSVForm()
@@ -143,7 +159,6 @@ def bulk_user_delete(request):
 
 from django.contrib.auth import update_session_auth_hash
 from django.contrib.auth.forms import PasswordChangeForm
-from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, redirect
 from django.contrib import messages
 
@@ -156,11 +171,17 @@ def change_password(request):
             # Important to keep the user logged in after password change
             update_session_auth_hash(request, user)
             messages.success(request, 'Your password was successfully updated!')
-            return redirect('home')  # Redirect to a success page
+            return redirect('role_router')
         else:
             messages.error(request, 'Your password was not updated! Please correct the error below.')
     else:
         form = PasswordChangeForm(request.user)
+    try:
+        base_user = BaseUser.objects.get(username=request.user.username)
+        base_role = base_user.role
+    except BaseUser.DoesNotExist:
+        base_role = None
     return render(request, 'trading/reset_password.html', {
-        'form': form
+        'form': form,
+        'base_role': base_role,
     })
