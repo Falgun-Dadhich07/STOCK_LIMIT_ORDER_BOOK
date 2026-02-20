@@ -56,9 +56,6 @@ db.sqlite3
 media/
 staticfiles/
 static/
-# Ignore all migrations except __init__.py
-**/migrations/*
-!**/migrations/__init__.py
 
 # Jupyter Notebook
 .ipynb_checkpoints

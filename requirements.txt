@@ -15,7 +15,7 @@ hyperlink==21.0.0
 idna==3.10
 incremental==24.7.2
 msgpack==1.1.0
-psycopg2==2.9.10
+psycopg2-binary==2.9.10
 pyasn1==0.6.1
 pyasn1_modules==0.4.2
 pycparser==2.22
@@ -30,3 +30,6 @@ txaio==23.1.1
 typing_extensions==4.13.2
 uvicorn==0.34.2
 zope.interface==7.2
+dj-database-url==2.3.0
+whitenoise==6.8.2
+gunicorn==23.0.0

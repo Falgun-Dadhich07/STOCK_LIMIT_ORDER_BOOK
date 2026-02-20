@@ -20,7 +20,25 @@ This project is a web-based trading system that simulates a stock limit order bo
 - Redis (for real-time features)
 - Node.js & npm (if frontend build is required)
 
-## Installation and Setup
+## Docker Setup (Recommended)
+
+1. **Run with Docker Compose:**
+   ```sh
+   docker-compose up --build
+   ```
+   The application will be available at `http://localhost:8000`.
+
+2. **Create Admin User (in a new terminal):**
+   ```sh
+   docker-compose exec web python manage.py createsuperuser
+   ```
+
+3. **Stop the services:**
+   ```sh
+   docker-compose down
+   ```
+
+## Installation and Setup (Manual)
 
 1. **Clone the repository:**
    ```sh
