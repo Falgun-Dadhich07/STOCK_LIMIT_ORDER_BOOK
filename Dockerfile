@@ -33,5 +33,5 @@ EXPOSE ${PORT:-8000}
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
     CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:8000/').read()" || exit 1
 
-# Run application with Daphne for async Django + Channels support
-CMD daphne -b 0.0.0.0 -p ${PORT:-8000} trading_system.asgi:application
+# Run migrations then start Daphne for async Django + Channels support
+CMD sh -c "python manage.py migrate && daphne -b 0.0.0.0 -p ${PORT:-8000} trading_system.asgi:application"
