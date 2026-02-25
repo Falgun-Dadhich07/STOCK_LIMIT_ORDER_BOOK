@@ -100,7 +100,7 @@ WSGI_APPLICATION = "trading_system.wsgi.application"
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 # Railway injects DATABASE_URL automatically when you add a PostgreSQL service
 
-<<<<<<< HEAD
+# <<<<<<< HEAD
 DATABASES = { 'default': {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': os.getenv('DB_NAME'),
@@ -111,13 +111,13 @@ DATABASES = { 'default': {
         #'OPTIONS': {
         #    'sslmode': 'require',
         #}
-    }
-=======
+    }}
+# =======
 DATABASES = {
     'default': dj_database_url.config(
         default='postgresql://trading_user:password@localhost:5432/trading_platform'
     )
->>>>>>> cab3581 (Prepare for Railway deployment)
+# >>>>>>> cab3581 (Prepare for Railway deployment)
 }
 
 
