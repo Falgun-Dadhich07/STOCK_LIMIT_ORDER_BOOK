@@ -475,6 +475,115 @@
         gap: 15px;
       }
     }
+
+    /* Chart Container */
+    .chart-container {
+      position: relative;
+      height: 160px;
+      overflow: hidden;
+      border-radius: 8px;
+    }
+    #price-chart {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+    .chart-overlay {
+      position: absolute;
+      top: 8px;
+      right: 10px;
+      font-size: 0.65rem;
+      color: var(--text-dim);
+      font-family: 'Orbitron', sans-serif;
+    }
+
+    /* Tab System */
+    .tab-nav {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 16px;
+      border-bottom: 1px solid var(--card-border);
+      padding-bottom: 10px;
+    }
+    .tab-btn {
+      padding: 7px 14px;
+      font-size: 0.7rem;
+      cursor: pointer;
+      border: 1px solid transparent;
+      border-radius: 8px;
+      color: var(--text-dim);
+      background: transparent;
+      font-family: 'Inter', sans-serif;
+      transition: all 0.25s;
+    }
+    .tab-btn.active {
+      color: var(--neon);
+      border-color: var(--neon);
+      background: rgba(0,229,255,0.06);
+    }
+    .tab-btn:hover:not(.active) { color: var(--text); }
+    .tab-pane { display: none; }
+    .tab-pane.active { display: block; }
+
+    /* Market Maker mini-card */
+    .mm-mini-card {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 18px;
+      border-radius: 12px;
+      background: rgba(124,77,255,0.07);
+      border: 1px solid rgba(124,77,255,0.2);
+      text-decoration: none;
+      transition: all 0.3s;
+      margin-bottom: 16px;
+    }
+    .mm-mini-card:hover {
+      background: rgba(124,77,255,0.12);
+      border-color: rgba(124,77,255,0.4);
+      transform: translateY(-2px);
+    }
+    .mm-mini-left { display: flex; flex-direction: column; gap: 4px; }
+    .mm-mini-title { font-family: 'Orbitron', sans-serif; font-size: 0.75rem; color: var(--accent); font-weight: 700; }
+    .mm-mini-sub { font-size: 0.68rem; color: var(--text-dim); }
+    .mm-mini-status {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 0.65rem;
+      font-weight: 700;
+      padding: 4px 10px;
+      border-radius: 10px;
+    }
+    .mm-mini-status.active   { color: var(--green); background: rgba(0,230,118,0.12); border: 1px solid rgba(0,230,118,0.3); }
+    .mm-mini-status.inactive { color: var(--text-dim); background: rgba(100,100,100,0.1); border: 1px solid rgba(100,100,100,0.2); }
+
+    /* Order type toggle */
+    .order-type-toggle {
+      display: flex;
+      border-radius: 10px;
+      overflow: hidden;
+      border: 1px solid var(--card-border);
+      margin-bottom: 4px;
+    }
+    .ot-btn {
+      flex: 1;
+      padding: 10px;
+      border: none;
+      cursor: pointer;
+      font-family: 'Orbitron', sans-serif;
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 1px;
+      transition: all 0.3s;
+      background: transparent;
+      color: var(--text-dim);
+    }
+    .ot-btn.buy.active  { background: rgba(0,230,118,0.15); color: var(--green); }
+    .ot-btn.sell.active { background: rgba(255,23,68,0.15);  color: var(--red); }
+    .ot-btn:hover:not(.active) { background: rgba(100,100,255,0.06); color: var(--text); }
+
+    /* Gold color */
+    :root { --gold: #ffd740; }
+    .val.gold { color: var(--gold); }
   </style>
 </head>
 
@@ -487,14 +596,15 @@
       <span>Logged in as</span>
       <span class="username">{{ user.username }}</span>
       <div class="nav-links">
+        <a href="{% url 'market_maker' %}" style="color:var(--gold,#ffd740);border-color:rgba(255,215,64,0.3);">🤖 Market Maker</a>
         <a href="{% url 'modify_order' %}">Modify Orders</a>
-        <a href="{% url 'password_reset' %}">Reset Password</a>
+        <a href="{% url 'orderbook' %}" target="_blank">Order Book</a>
         {% if request.user.is_superuser %}
         <a href="{% url 'bulk_user_upload' %}">Bulk Upload</a>
         <a href="{% url 'bulk_user_delete' %}">Bulk Delete</a>
-        <a href="{% url 'orderbook' %}" target="_blank">Order Book</a>
         {% endif %}
-        <a href="{% url 'market_dashboard' %}">Market Master</a>
+        <a href="{% url 'market_dashboard' %}">Market Stats</a>
+        <a href="{% url 'logout' %}">Logout</a>
       </div>
     </div>
   </div>
@@ -525,12 +635,24 @@
       <span class="val red" id="t-low">{{ market.day_low|default:"—" }}</span>
     </div>
     <div class="ticker-item">
+      <span class="label">Open</span>
+      <span class="val gold" id="t-open">{{ market.opening_price|default:"—" }}</span>
+    </div>
+    <div class="ticker-item">
       <span class="label">Volume</span>
       <span class="val cyan" id="t-vol">{{ market.total_volume|default:"0" }}</span>
     </div>
     <div class="ticker-item">
       <span class="label">Trades</span>
       <span class="val cyan" id="t-trades">{{ market.total_trades|default:"0" }}</span>
+    </div>
+    <div class="ticker-item">
+      <span class="label">Best Bid</span>
+      <span class="val green" id="t-bid">—</span>
+    </div>
+    <div class="ticker-item">
+      <span class="label">Best Ask</span>
+      <span class="val red" id="t-ask">—</span>
     </div>
   </div>
 
@@ -560,17 +682,30 @@
     <!-- Order Form -->
     <div class="card">
       <div class="card-title">📋 Place Order</div>
+
+      <!-- Market Maker shortcut -->
+      <a href="{% url 'market_maker' %}" class="mm-mini-card" id="mm-shortcut">
+        <div class="mm-mini-left">
+          <span class="mm-mini-title">🤖 Market Maker</span>
+          <span class="mm-mini-sub">Auto-place buy &amp; sell orders around reference price</span>
+        </div>
+        <span class="mm-mini-status inactive" id="mm-shortcut-status">INACTIVE</span>
+      </a>
+
       <form method="post" id="myForm">
         {% csrf_token %}
-        <div class="form-grid">
-          <div class="form-group">
-            <label for="order_type">Order Type</label>
-            <select name="order_type" class="form-control">
-              <option value="BUY">Buy</option>
-              <option value="SELL">Sell</option>
-            </select>
-          </div>
 
+        <!-- BUY / SELL Toggle -->
+        <div class="form-group" style="margin-bottom:14px;">
+          <label>Order Side</label>
+          <div class="order-type-toggle">
+            <button type="button" class="ot-btn buy active" id="ot-buy" onclick="selectOrderType('BUY')">▲ BUY</button>
+            <button type="button" class="ot-btn sell" id="ot-sell" onclick="selectOrderType('SELL')">▼ SELL</button>
+          </div>
+          <input type="hidden" name="order_type" id="order_type_hidden" value="BUY">
+        </div>
+
+        <div class="form-grid">
           <div class="form-group">
             <label for="order_mode">Order Mode</label>
             <select name="order_mode" id="order_mode" class="form-control" onchange="checkOrderMode()">
@@ -616,139 +751,174 @@
             <input type="number" step="0.01" name="price" class="form-control">
           </div>
 
-          <button type="submit" class="btn-submit">Submit Order</button>
+          <button type="submit" class="btn-submit" id="submit-btn">▲ Submit BUY Order</button>
         </div>
       </form>
     </div>
 
-    <!-- Active Orders -->
+    <!-- Right: Chart + Active Orders tabs -->
     <div class="card">
-      <div class="card-title">📊 Active Orders</div>
-      <div class="table-wrap">
-        {% if orders %}
-        <table>
-          <thead>
-            <tr>
-              <th>Type</th>
-              <th>Mode</th>
-              <th>Qty</th>
-              <th>Disclosed</th>
-              <th>Orig Qty</th>
-              <th>Price</th>
-              <th>ID</th>
-              <th>Action</th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for order in orders %}
-            {% if not order.is_matched %}
-            <tr id="order-{{ order.id }}"
-              class="{% if order.order_type == 'BUY' %}buy-row{% else %}sell-row{% endif %}">
-              <td class="{% if order.order_type == 'BUY' %}text-buy{% else %}text-sell{% endif %}">
-                {{ order.order_type }}</td>
-              <td>{{ order.order_mode }}</td>
-              <td>{{ order.quantity }}</td>
-              <td>{{ order.disclosed }}</td>
-              <td>{{ order.original_quantity }}</td>
-              <td>{{ order.price }}</td>
-              <td style="color: var(--text-dim);">#{{ order.id }}</td>
-              <td>
-                <button onclick="cancelOrder('{{ order.id }}')" class="btn-cancel">Cancel</button>
-              </td>
-            </tr>
-            {% endif %}
-            {% endfor %}
-          </tbody>
-        </table>
-        {% else %}
-        <div class="empty-state">No active orders</div>
-        {% endif %}
-      </div>
-    </div>
 
-    <!-- Completed Trades -->
-    <div class="card full-width">
-      <div class="card-title">✅ Completed Trades</div>
-      <div class="table-wrap">
-        {% if trades %}
-        <table>
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>Buyer</th>
-              <th>Seller</th>
-              <th>Quantity</th>
-              <th>Price</th>
-              <th>Time</th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for trade in trades %}
-            <tr>
-              <td>#{{ trade.id }}</td>
-              <td>{{ trade.buyer.username }}</td>
-              <td>{{ trade.seller.username }}</td>
-              <td>{{ trade.quantity }}</td>
-              <td style="color: var(--neon);">{{ trade.price }}</td>
-              <td style="color: var(--text-dim);">{{ trade.timestamp|date:"M d, H:i:s" }}</td>
-            </tr>
-            {% endfor %}
-          </tbody>
-        </table>
-        {% else %}
-        <div class="empty-state">No trades yet — trades execute only when buy & sell quantities match exactly</div>
-        {% endif %}
+      <!-- Mini Price Chart -->
+      <div class="card-title">📈 Price Chart</div>
+      <div class="chart-container" style="margin-bottom:20px;">
+        <canvas id="price-chart"></canvas>
+        <div class="chart-overlay" id="chart-ltp"></div>
       </div>
-    </div>
 
-    <!-- Stoploss Orders -->
-    {% if stoploss_orders %}
-    <div class="card full-width">
-      <div class="card-title">🛡 Stop-Loss Orders</div>
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th>Type</th>
-              <th>Mode</th>
-              <th>Qty</th>
-              <th>Disclosed</th>
-              <th>Price</th>
-              <th>Target</th>
-              <th>Status</th>
-              <th>ID</th>
-              <th>Action</th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for order in stoploss_orders %}
-            {% if not order.is_matched %}
-            <tr id="stoploss-order-{{ order.id }}">
-              <td style="color: {% if order.order_type == 'BUY' %}var(--green){% else %}var(--red){% endif %};">{{
-                order.order_type }}</td>
-              <td>{{ order.order_mode }}</td>
-              <td>{{ order.quantity }}</td>
-              <td>{{ order.disclosed }}</td>
-              <td>{{ order.price }}</td>
-              <td style="color: var(--accent);">{{ order.target_price }}</td>
-              <td>Active</td>
-              <td style="color: var(--text-dim);">#{{ order.id }}</td>
-              <td>
-                <button onclick="cancelStoplossOrder('{{ order.id }}')" class="btn-cancel">Cancel</button>
-              </td>
-            </tr>
-            {% endif %}
-            {% endfor %}
-          </tbody>
-        </table>
+      <!-- Tabs: Active Orders / Completed Trades / Stop-Loss -->
+      <div class="tab-nav">
+        <button class="tab-btn active" onclick="switchHomeTab('active-orders', this)">Active Orders</button>
+        <button class="tab-btn" onclick="switchHomeTab('completed-trades', this)">Trades</button>
+        {% if stoploss_orders %}<button class="tab-btn" onclick="switchHomeTab('stoploss', this)">Stop-Loss</button>{% endif %}
       </div>
+
+      <!-- Active Orders -->
+      <div class="tab-pane active" id="pane-active-orders">
+        <div class="table-wrap">
+          {% if orders %}
+          <table>
+            <thead>
+              <tr>
+                <th>Type</th>
+                <th>Mode</th>
+                <th>Qty</th>
+                <th>Price</th>
+                <th>ID</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for order in orders %}
+              {% if not order.is_matched %}
+              <tr id="order-{{ order.id }}"
+                class="{% if order.order_type == 'BUY' %}buy-row{% else %}sell-row{% endif %}">
+                <td class="{% if order.order_type == 'BUY' %}text-buy{% else %}text-sell{% endif %}">
+                  {{ order.order_type }}{% if order.is_market_maker %} <small style="color:var(--accent);font-size:0.6rem;">MM</small>{% endif %}
+                </td>
+                <td>{{ order.order_mode }}</td>
+                <td>{{ order.quantity }}</td>
+                <td>{{ order.price }}</td>
+                <td style="color: var(--text-dim);">#{{ order.id }}</td>
+                <td>
+                  <button onclick="cancelOrder('{{ order.id }}')" class="btn-cancel">Cancel</button>
+                </td>
+              </tr>
+              {% endif %}
+              {% endfor %}
+            </tbody>
+          </table>
+          {% else %}
+          <div class="empty-state">No active orders</div>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- Completed Trades -->
+      <div class="tab-pane" id="pane-completed-trades">
+        <div class="table-wrap">
+          {% if trades %}
+          <table>
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Buyer</th>
+                <th>Seller</th>
+                <th>Qty</th>
+                <th>Price</th>
+                <th>Time</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for trade in trades %}
+              <tr>
+                <td>#{{ trade.id }}</td>
+                <td>{{ trade.buyer.username }}</td>
+                <td>{{ trade.seller.username }}</td>
+                <td>{{ trade.quantity }}</td>
+                <td style="color: var(--neon);">{{ trade.price }}</td>
+                <td style="color: var(--text-dim);">{{ trade.timestamp|date:"M d, H:i:s" }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+          {% else %}
+          <div class="empty-state">No trades yet</div>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- Stop-Loss Orders -->
+      {% if stoploss_orders %}
+      <div class="tab-pane" id="pane-stoploss">
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Type</th>
+                <th>Qty</th>
+                <th>Price</th>
+                <th>Target</th>
+                <th>ID</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for order in stoploss_orders %}
+              {% if not order.is_matched %}
+              <tr id="stoploss-order-{{ order.id }}">
+                <td style="color: {% if order.order_type == 'BUY' %}var(--green){% else %}var(--red){% endif %};">{{ order.order_type }}</td>
+                <td>{{ order.quantity }}</td>
+                <td>{{ order.price }}</td>
+                <td style="color: var(--accent);">{{ order.target_price }}</td>
+                <td style="color: var(--text-dim);">#{{ order.id }}</td>
+                <td>
+                  <button onclick="cancelStoplossOrder('{{ order.id }}')" class="btn-cancel">Cancel</button>
+                </td>
+              </tr>
+              {% endif %}
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+      {% endif %}
+
     </div>
-    {% endif %}
 
   </div>
 
   <script>
-    // Form validation & auto-fill
+    // ─── Order Side Toggle ───────────────────────────────────────────────
+    function selectOrderType(type) {
+      document.getElementById('order_type_hidden').value = type;
+      const buyBtn  = document.getElementById('ot-buy');
+      const sellBtn = document.getElementById('ot-sell');
+      const submitBtn = document.getElementById('submit-btn');
+      if (type === 'BUY') {
+        buyBtn.classList.add('active');
+        sellBtn.classList.remove('active');
+        submitBtn.textContent = '▲ Submit BUY Order';
+        submitBtn.style.background = 'linear-gradient(135deg, #00c853, var(--green))';
+      } else {
+        sellBtn.classList.add('active');
+        buyBtn.classList.remove('active');
+        submitBtn.textContent = '▼ Submit SELL Order';
+        submitBtn.style.background = 'linear-gradient(135deg, #d50000, var(--red))';
+      }
+      updatePrice();
+    }
+
+    // ─── Home Tabs ────────────────────────────────────────────────────────
+    function switchHomeTab(paneId, btn) {
+      document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      const pane = document.getElementById('pane-' + paneId);
+      if (pane) pane.classList.add('active');
+      if (btn) btn.classList.add('active');
+    }
+
+    // ─── Form validation & auto-fill ────────────────────────────────────
     document.addEventListener('DOMContentLoaded', function () {
       const qtyInput = document.getElementById('quantity');
       const discInput = document.getElementById('disclosed_quantity');
@@ -776,10 +946,11 @@
         if (!form.checkValidity()) { e.preventDefault(); form.reportValidity(); }
       });
 
-      // Init
       checkOrderMode();
       updatePrice();
       toggleFields();
+      initChart();
+      loadMMStatus();
     });
 
     function checkOrderMode() {
@@ -797,7 +968,7 @@
     }
 
     function updatePrice() {
-      const type = document.querySelector('select[name="order_type"]').value;
+      const type = document.getElementById('order_type_hidden').value;
       const mode = document.querySelector('select[name="order_mode"]').value;
       const priceField = document.querySelector('input[name="price"]');
       const priceLabel = document.getElementById('price-label');
@@ -854,10 +1025,10 @@
     }
 
     document.addEventListener('DOMContentLoaded', function () {
-      document.querySelector('select[name="order_type"]').addEventListener('change', updatePrice);
       document.querySelector('select[name="order_mode"]').addEventListener('change', updatePrice);
     });
 
+    // ─── Cancel Orders ───────────────────────────────────────────────────
     function cancelOrder(orderId) {
       if (!confirm('Cancel this order?')) return;
       const row = document.getElementById(`order-${orderId}`);
@@ -895,6 +1066,7 @@
         .catch(err => { if (row) { row.style.opacity = '1'; row.style.transform = 'none'; } showFlash(err.message, 'error'); });
     }
 
+    // ─── Flash Messages ──────────────────────────────────────────────────
     function showFlash(msg, type) {
       let c = document.getElementById('flash-container');
       if (!c) { c = document.createElement('div'); c.id = 'flash-container'; c.className = 'flash-container'; document.body.appendChild(c); }
@@ -906,16 +1078,135 @@
       setTimeout(() => { el.style.animation = 'slideOut 0.3s ease forwards'; setTimeout(() => el.remove(), 300); }, 4000);
     }
 
-    // Live ticker refresh
-    setInterval(() => {
+    // ─── Price Chart ─────────────────────────────────────────────────────
+    const priceHistory = [];
+    const MAX_POINTS = 50;
+
+    function initChart() {
+      drawChart();
+    }
+
+    function pushPrice(price) {
+      if (!price) return;
+      priceHistory.push(parseFloat(price));
+      if (priceHistory.length > MAX_POINTS) priceHistory.shift();
+      drawChart();
+    }
+
+    function drawChart() {
+      const canvas = document.getElementById('price-chart');
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      const dpr = window.devicePixelRatio || 1;
+
+      canvas.width = canvas.offsetWidth * dpr;
+      canvas.height = canvas.offsetHeight * dpr;
+      ctx.scale(dpr, dpr);
+
+      const W = canvas.offsetWidth;
+      const H = canvas.offsetHeight;
+      ctx.clearRect(0, 0, W, H);
+
+      if (priceHistory.length < 2) {
+        ctx.fillStyle = 'rgba(106,106,138,0.5)';
+        ctx.font = '12px Inter, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('Waiting for trades...', W / 2, H / 2);
+        return;
+      }
+
+      const min = Math.min(...priceHistory) * 0.999;
+      const max = Math.max(...priceHistory) * 1.001;
+      const range = max - min || 1;
+
+      const stepX = W / (priceHistory.length - 1);
+
+      // Gradient fill
+      const grad = ctx.createLinearGradient(0, 0, 0, H);
+      grad.addColorStop(0, 'rgba(0,229,255,0.25)');
+      grad.addColorStop(1, 'rgba(0,229,255,0.00)');
+
+      ctx.beginPath();
+      priceHistory.forEach((p, i) => {
+        const x = i * stepX;
+        const y = H - ((p - min) / range) * (H - 16) - 4;
+        i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+      });
+      // Close fill area
+      ctx.lineTo((priceHistory.length - 1) * stepX, H);
+      ctx.lineTo(0, H);
+      ctx.closePath();
+      ctx.fillStyle = grad;
+      ctx.fill();
+
+      // Line
+      ctx.beginPath();
+      priceHistory.forEach((p, i) => {
+        const x = i * stepX;
+        const y = H - ((p - min) / range) * (H - 16) - 4;
+        i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+      });
+      ctx.strokeStyle = '#00e5ff';
+      ctx.lineWidth = 2;
+      ctx.lineJoin = 'round';
+      ctx.stroke();
+
+      // Last price dot
+      const lastX = (priceHistory.length - 1) * stepX;
+      const lastY = H - ((priceHistory[priceHistory.length - 1] - min) / range) * (H - 16) - 4;
+      ctx.beginPath();
+      ctx.arc(lastX, lastY, 4, 0, Math.PI * 2);
+      ctx.fillStyle = '#00e5ff';
+      ctx.shadowColor = '#00e5ff';
+      ctx.shadowBlur = 10;
+      ctx.fill();
+      ctx.shadowBlur = 0;
+
+      // Update overlay
+      const ltpEl = document.getElementById('chart-ltp');
+      if (ltpEl) ltpEl.textContent = priceHistory[priceHistory.length - 1].toFixed(2);
+    }
+
+    window.addEventListener('resize', drawChart);
+
+    // ─── Market Maker Status (shortcut card) ────────────────────────────
+    function loadMMStatus() {
+      fetch("{% url 'market_maker_status' %}")
+        .then(r => r.json())
+        .then(d => {
+          const el = document.getElementById('mm-shortcut-status');
+          if (el) {
+            el.textContent = d.is_active ? 'ACTIVE' : 'INACTIVE';
+            el.className = 'mm-mini-status ' + (d.is_active ? 'active' : 'inactive');
+          }
+        })
+        .catch(() => {});
+    }
+
+    // ─── Live ticker + chart refresh ────────────────────────────────────
+    function refreshTicker() {
       fetch('/market/stats/').then(r => r.json()).then(d => {
-        document.getElementById('t-ltp').textContent = d.last_traded_price || '—';
-        document.getElementById('t-high').textContent = d.day_high || '—';
-        document.getElementById('t-low').textContent = d.day_low || '—';
-        document.getElementById('t-vol').textContent = d.total_volume || '0';
+        const ltp = d.last_traded_price;
+        document.getElementById('t-ltp').textContent   = ltp   || '—';
+        document.getElementById('t-high').textContent  = d.day_high || '—';
+        document.getElementById('t-low').textContent   = d.day_low  || '—';
+        document.getElementById('t-open').textContent  = d.opening_price || '—';
+        document.getElementById('t-vol').textContent   = d.total_volume  || '0';
         document.getElementById('t-trades').textContent = d.total_trades || '0';
+        if (ltp) pushPrice(ltp);
       }).catch(() => { });
-    }, 5000);
+
+      fetch('/orderbook/get_best_bid/').then(r => r.json()).then(d => {
+        document.getElementById('t-bid').textContent = d.best_bid ? d.best_bid.price : '—';
+      }).catch(() => {});
+
+      fetch('/orderbook/get_best_ask/').then(r => r.json()).then(d => {
+        document.getElementById('t-ask').textContent = d.best_ask ? d.best_ask.price : '—';
+      }).catch(() => {});
+    }
+
+    setInterval(refreshTicker, 4000);
+    setInterval(loadMMStatus, 10000);
   </script>
 </body>
 

@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import User, Order, Trade, Stoploss_Order, MarketMaster
+from .models import User, Order, Trade, Stoploss_Order, MarketMaster, MarketMakerConfig
 
 
 @admin.register(User)
@@ -32,3 +32,10 @@ class StoplossOrderAdmin(admin.ModelAdmin):
 class MarketMasterAdmin(admin.ModelAdmin):
     list_display = ('name', 'is_active', 'last_traded_price', 'total_trades', 'total_volume', 'day_high', 'day_low', 'opening_price', 'updated_at')
     list_filter = ('is_active',)
+
+
+@admin.register(MarketMakerConfig)
+class MarketMakerConfigAdmin(admin.ModelAdmin):
+    list_display = ('user', 'is_active', 'reference_price', 'spread_pct', 'quantity', 'num_levels', 'updated_at')
+    list_filter = ('is_active',)
+    search_fields = ('user__username',)

@@ -27,4 +27,7 @@ urlpatterns = [
     path('market/toggle/', views.toggle_market, name='toggle_market'),
     path('market/stats/', views.get_market_stats, name='market_stats'),
     path('trades/download/', views.download_trades_csv, name='download_trades_csv'),
+    # Market Maker routes (for regular users)
+    path('market-maker/', views.market_maker_page, name='market_maker'),
+    path('market-maker/status/', views.market_maker_status, name='market_maker_status'),
 ]
