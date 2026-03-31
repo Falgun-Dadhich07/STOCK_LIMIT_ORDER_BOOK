@@ -360,6 +360,16 @@
       border-left: 2px solid var(--red);
     }
 
+    .text-buy {
+      color: var(--green);
+      font-weight: 600;
+    }
+
+    .text-sell {
+      color: var(--red);
+      font-weight: 600;
+    }
+
     /* Cancel Button */
     .btn-cancel {
       padding: 5px 12px;
@@ -634,8 +644,7 @@
             {% if not order.is_matched %}
             <tr id="order-{{ order.id }}"
               class="{% if order.order_type == 'BUY' %}buy-row{% else %}sell-row{% endif %}">
-              <td
-                style="color: {% if order.order_type == 'BUY' %}var(--green){% else %}var(--red){% endif %}; font-weight: 600;">
+              <td class="{% if order.order_type == 'BUY' %}text-buy{% else %}text-sell{% endif %}">
                 {{ order.order_type }}</td>
               <td>{{ order.order_mode }}</td>
               <td>{{ order.quantity }}</td>
