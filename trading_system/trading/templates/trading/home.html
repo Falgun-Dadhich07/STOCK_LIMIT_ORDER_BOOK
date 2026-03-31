@@ -1,904 +1,711 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Order Form</title>
-  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
+  <title>Trading Dashboard</title>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Inter:wght@300;400;500;600&display=swap"
+    rel="stylesheet">
   <style>
-    /* Reset */
-    * { margin: 0; padding: 0; box-sizing: border-box; }
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
 
     :root {
-      --bg-color: #0f0f0f;
-      --card-bg: rgba(30, 30, 30, 0.8);
-      --card-border: rgba(255, 255, 255, 0.1);
-      --neon: #0ff;
-      --accent: #ff0;
-      --text-color: #e0e0e0;
-      --input-bg: rgba(0, 0, 0, 0.2);
+      --bg: #0a0a0f;
+      --card-bg: rgba(20, 20, 35, 0.9);
+      --card-border: rgba(100, 100, 255, 0.12);
+      --neon: #00e5ff;
+      --neon-glow: rgba(0, 229, 255, 0.25);
+      --accent: #7c4dff;
+      --green: #00e676;
+      --green-dim: rgba(0, 230, 118, 0.15);
+      --red: #ff1744;
+      --red-dim: rgba(255, 23, 68, 0.15);
+      --text: #e8e8f0;
+      --text-dim: #6a6a8a;
+      --input-bg: rgba(10, 10, 20, 0.6);
     }
 
     body {
-      font-family: 'Orbitron', sans-serif;
-      background: linear-gradient(45deg, #000, #1a1a1a, #000);
-      background-size: 400% 400%;
-      animation: gradientBG 15s ease infinite;
-      color: var(--text-color);
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      background-image:
+        radial-gradient(ellipse at 15% 25%, rgba(124, 77, 255, 0.06) 0%, transparent 50%),
+        radial-gradient(ellipse at 85% 75%, rgba(0, 229, 255, 0.04) 0%, transparent 50%);
+      color: var(--text);
       min-height: 100vh;
-      padding: 20px;
     }
 
-    @keyframes gradientBG {
-      0% { background-position: 0% 50%; }
-      50% { background-position: 100% 50%; }
-      100% { background-position: 0% 50%; }
+    /* Top Bar */
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 14px 30px;
+      background: rgba(15, 15, 25, 0.95);
+      border-bottom: 1px solid var(--card-border);
+      backdrop-filter: blur(20px);
+      position: sticky;
+      top: 0;
+      z-index: 100;
     }
 
-    .container {
-      max-width: 1200px;
-      margin: 40px auto;
-      padding: 20px;
-      backdrop-filter: blur(10px);
+    .topbar .brand {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 1.1rem;
+      font-weight: 700;
+      background: linear-gradient(135deg, var(--neon), var(--accent));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
     }
 
+    .topbar .user-info {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      font-size: 0.85rem;
+    }
+
+    .topbar .user-info span {
+      color: var(--text-dim);
+    }
+
+    .topbar .user-info .username {
+      color: var(--neon);
+      font-weight: 600;
+    }
+
+    /* Market Status Banner */
+    .market-banner {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      padding: 10px 20px;
+      font-family: 'Orbitron', sans-serif;
+      font-size: 0.7rem;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+    }
+
+    .market-banner.open {
+      background: rgba(0, 230, 118, 0.08);
+      color: var(--green);
+      border-bottom: 1px solid rgba(0, 230, 118, 0.2);
+    }
+
+    .market-banner.closed {
+      background: rgba(255, 23, 68, 0.08);
+      color: var(--red);
+      border-bottom: 1px solid rgba(255, 23, 68, 0.2);
+    }
+
+    .market-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+    }
+
+    .market-dot.open {
+      background: var(--green);
+      box-shadow: 0 0 8px var(--green);
+      animation: blink 2s infinite;
+    }
+
+    .market-dot.closed {
+      background: var(--red);
+      box-shadow: 0 0 8px var(--red);
+    }
+
+    @keyframes blink {
+
+      0%,
+      100% {
+        opacity: 1;
+      }
+
+      50% {
+        opacity: 0.3;
+      }
+    }
+
+    /* Ticker Stats */
+    .ticker-bar {
+      display: flex;
+      justify-content: center;
+      gap: 30px;
+      padding: 12px 20px;
+      background: rgba(15, 15, 25, 0.6);
+      border-bottom: 1px solid var(--card-border);
+      font-size: 0.75rem;
+      overflow-x: auto;
+    }
+
+    .ticker-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      white-space: nowrap;
+    }
+
+    .ticker-item .label {
+      color: var(--text-dim);
+      font-size: 0.65rem;
+      text-transform: uppercase;
+    }
+
+    .ticker-item .val {
+      font-weight: 600;
+      font-family: 'Orbitron', sans-serif;
+      font-size: 0.75rem;
+    }
+
+    .ticker-item .val.green {
+      color: var(--green);
+    }
+
+    .ticker-item .val.red {
+      color: var(--red);
+    }
+
+    .ticker-item .val.cyan {
+      color: var(--neon);
+    }
+
+    /* Main Layout */
+    .main-content {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 24px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+    }
+
+    .full-width {
+      grid-column: 1 / -1;
+    }
+
+    /* Nav Links */
+    .nav-links {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      padding: 0;
+    }
+
+    .nav-links a {
+      text-decoration: none;
+      color: var(--text-dim);
+      font-size: 0.75rem;
+      padding: 8px 16px;
+      border: 1px solid var(--card-border);
+      border-radius: 8px;
+      transition: all 0.3s;
+    }
+
+    .nav-links a:hover {
+      color: var(--neon);
+      border-color: var(--neon);
+      background: rgba(0, 229, 255, 0.06);
+      box-shadow: 0 0 12px var(--neon-glow);
+    }
+
+    /* Cards */
     .card {
       background: var(--card-bg);
       border: 1px solid var(--card-border);
-      border-radius: 15px;
-      box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
-      padding: 30px;
-      margin-bottom: 30px;
-      transition: transform 0.3s ease;
+      border-radius: 14px;
+      padding: 24px;
+      transition: all 0.3s;
     }
 
     .card:hover {
-      transform: translateY(-5px);
+      border-color: rgba(100, 100, 255, 0.25);
     }
 
-    h1, h2, h3 {
-      text-align: center;
-      margin-bottom: 20px;
-      text-shadow: 0 0 10px rgba(0, 255, 255, 0.7);
-    }
-
-    p {
-      text-align: center;
-      font-size: 18px;
-      color: #aaa;
-      margin-bottom: 20px;
-    }
-
-    .btn {
-      background: linear-gradient(45deg, var(--neon), var(--accent));
-      border: none;
-      border-radius: 8px;
-      padding: 15px 30px;
-      color: var(--bg-color);
-      font-size: 16px;
-      font-weight: bold;
-      text-transform: uppercase;
-      cursor: pointer;
-      transition: transform 0.3s ease, box-shadow 0.3s ease;
-      display: inline-block;
-      text-decoration: none;
-      margin: 10px;
-    }
-
-    .btn:hover {
-      transform: translateY(-3px);
-      box-shadow: 0 0 15px rgba(0, 255, 255, 0.7);
-    }
-
-    form {
-      background: rgba(20, 20, 20, 0.9);
-      padding: 30px;
-      border-radius: 15px;
-      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.37);
-      margin-bottom: 30px;
-    }
-
-    .input-group {
-      margin-bottom: 20px;
-    }
-
-    label {
-      display: block;
-      margin-bottom: 5px;
-      font-size: 14px;
-      color: #aaa;
-    }
-
-    /* Updated styling for inputs and select */
-    .form-control, select {
-      width: 100%;
-      padding: 12px 15px;
-      margin-bottom: 5px;
-      border: 1px solid rgba(255, 255, 255, 0.2);
-      border-radius: 8px;
-      background: var(--input-bg);
-      color: var(--text-color);
-      font-size: 16px;
-      transition: border 0.3s ease;
-      -webkit-appearance: none;
-         -moz-appearance: none;
-              appearance: none;
-    }
-
-    .form-control:focus, select:focus {
-      outline: none;
-      border-color: var(--neon);
-    }
-
-    /* Dropdown option styling */
-    select option {
-      background: rgba(0, 0, 0, 0.8);
-      color: var(--text-color);
-    }
-
-    .flash-message {
-      padding: 15px;
-      margin-bottom: 20px;
-      border-radius: 8px;
-      text-align: center;
-    }
-
-    .flash-message.alert-danger {
-      border-left: 4px solid #f44336;
-      background: rgba(244, 67, 54, 0.1);
-    }
-
-    .flash-message.alert-warning {
-      border-left: 4px solid #ff9800;
-      background: rgba(255, 152, 0, 0.1);
-    }
-
-    .grid-links {
-      display: flex;
-      justify-content: center;
-      flex-wrap: wrap;
-      gap: 15px;
-      margin-bottom: 30px;
-    }
-
-    .grid-links a {
-      text-decoration: none;
+    .card-title {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 0.85rem;
+      font-weight: 700;
+      margin-bottom: 18px;
       color: var(--neon);
-      font-weight: bold;
-      border: 1px solid var(--neon);
-      padding: 10px 20px;
-      border-radius: 8px;
-      transition: background 0.3s ease, color 0.3s ease;
-    }
-
-    .grid-links a:hover {
-      background: var(--neon);
-      color: var(--bg-color);
-    }
-
-    .table-container {
-      overflow-x: auto;
-      margin-top: 20px;
-    }
-
-    .table {
-      width: 100%;
-      border-collapse: collapse;
-      background: var(--card-bg);
-      border: 1px solid var(--card-border);
-      border-radius: 8px;
-      margin: 0 auto;
-      text-align: center;
-    }
-
-    .table th, .table td {
-      padding: 12px 15px;
-      border: 1px solid var(--card-border);
-      color: var(--text-color);
-    }
-
-    .table th {
-      background: rgba(0, 0, 0, 0.3);
-    }
-
-    .table tr:hover {
-      background: rgba(0,255,255,0.1);
-    }
-
-    @media screen and (max-width: 768px) {
-      .grid-links { flex-direction: column; align-items: center; }
-    }
-    .btn-danger {
-      background: linear-gradient(45deg, #ff4444, #cc0000) !important;
-      border: 1px solid #ff4444 !important;
-    }
-    
-    .btn-danger:hover {
-      box-shadow: 0 0 15px rgba(255, 68, 68, 0.7) !important;
-    }
-    
-    .alert-success {
-      border-left: 4px solid #00C851;
-      background: rgba(0, 200, 81, 0.1);
-    }
-    @keyframes slideIn {
-      from { transform: translateX(100%); }
-      to { transform: translateX(0); }
-  }
-  
-  @keyframes slideOut {
-      from { transform: translateX(0); }
-      to { transform: translateX(100%); }
-  }
-  
-  .flash-message {
-      position: fixed;
-      top: 20px;
-      right: 20px;
       display: flex;
       align-items: center;
-      gap: 15px;
-      padding: 15px 20px;
+      gap: 8px;
+    }
+
+    /* Form */
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    .form-group.full {
+      grid-column: 1 / -1;
+    }
+
+    .form-group label {
+      font-size: 0.7rem;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .form-control,
+    select {
+      width: 100%;
+      padding: 10px 14px;
+      border: 1px solid var(--card-border);
       border-radius: 8px;
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-      z-index: 1000;
-  }
-  
-  .close-btn {
+      background: var(--input-bg);
+      color: var(--text);
+      font-family: 'Inter', sans-serif;
+      font-size: 0.85rem;
+      transition: all 0.3s;
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      appearance: none;
+    }
+
+    .form-control:focus,
+    select:focus {
+      outline: none;
+      border-color: var(--neon);
+      box-shadow: 0 0 10px var(--neon-glow);
+    }
+
+    select option {
+      background: #1a1a2e;
+      color: var(--text);
+    }
+
+    .btn-submit {
+      grid-column: 1 / -1;
+      padding: 14px;
+      border: none;
+      border-radius: 10px;
+      font-family: 'Orbitron', sans-serif;
+      font-size: 0.8rem;
+      font-weight: 700;
       cursor: pointer;
-      font-size: 1.2em;
-      margin-left: 10px;
-  }
-  /* Add to existing styles */
-tr {
-    transition: all 0.3s ease !important;
-}
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      transition: all 0.3s;
+      background: linear-gradient(135deg, var(--neon), var(--accent));
+      color: #000;
+    }
 
-@keyframes cancelFlash {
-    0% { background-color: transparent; }
-    50% { background-color: #ff444433; }
-    100% { background-color: transparent; }
-}
+    .btn-submit:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 25px var(--neon-glow);
+    }
 
-.cancel-highlight {
-    animation: cancelFlash 1s ease;
-}
-/* Add to existing table row styles */
-.table tr {
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
-    transform-origin: left center;
-}
+    .btn-submit:active {
+      transform: translateY(0);
+    }
 
-@keyframes cancelPulse {
-    0% { transform: translateX(0); }
-    50% { transform: translateX(30px); }
-    100% { transform: translateX(-100%); }
-}
+    /* Tables */
+    .table-wrap {
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    table th,
+    table td {
+      padding: 10px 12px;
+      text-align: center;
+      border-bottom: 1px solid var(--card-border);
+      font-size: 0.75rem;
+    }
+
+    table th {
+      color: var(--text-dim);
+      font-size: 0.65rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      font-weight: 500;
+    }
+
+    table tr {
+      transition: all 0.3s;
+    }
+
+    table tr:hover {
+      background: rgba(0, 229, 255, 0.04);
+    }
+
+    .buy-row {
+      border-left: 2px solid var(--green);
+    }
+
+    .sell-row {
+      border-left: 2px solid var(--red);
+    }
+
+    /* Cancel Button */
+    .btn-cancel {
+      padding: 5px 12px;
+      border: 1px solid var(--red);
+      border-radius: 6px;
+      background: transparent;
+      color: var(--red);
+      font-size: 0.65rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-family: 'Inter', sans-serif;
+    }
+
+    .btn-cancel:hover {
+      background: var(--red-dim);
+    }
+
+    /* Flash Messages */
+    .flash-container {
+      position: fixed;
+      top: 80px;
+      right: 20px;
+      z-index: 200;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .flash-msg {
+      padding: 12px 20px;
+      border-radius: 10px;
+      font-size: 0.75rem;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      animation: slideIn 0.3s ease;
+      backdrop-filter: blur(10px);
+    }
+
+    .flash-msg.success {
+      background: rgba(0, 230, 118, 0.15);
+      border: 1px solid rgba(0, 230, 118, 0.3);
+      color: var(--green);
+    }
+
+    .flash-msg.error {
+      background: rgba(255, 23, 68, 0.15);
+      border: 1px solid rgba(255, 23, 68, 0.3);
+      color: var(--red);
+    }
+
+    .flash-close {
+      cursor: pointer;
+      margin-left: auto;
+      opacity: 0.7;
+    }
+
+    .flash-close:hover {
+      opacity: 1;
+    }
+
+    @keyframes slideIn {
+      from {
+        transform: translateX(100%);
+        opacity: 0;
+      }
+
+      to {
+        transform: translateX(0);
+        opacity: 1;
+      }
+    }
+
+    @keyframes slideOut {
+      from {
+        transform: translateX(0);
+        opacity: 1;
+      }
+
+      to {
+        transform: translateX(100%);
+        opacity: 0;
+      }
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 30px;
+      color: var(--text-dim);
+      font-size: 0.8rem;
+    }
+
+    @media (max-width: 900px) {
+      .main-content {
+        grid-template-columns: 1fr;
+      }
+
+      .form-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .ticker-bar {
+        gap: 15px;
+      }
+    }
   </style>
-  <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.0.5/dist/umd/popper.min.js"></script>
-  <script>
-
-document.addEventListener('DOMContentLoaded', function() {
-    const quantityInput = document.getElementById('quantity');
-    const disclosedInput = document.getElementById('disclosed_quantity');
-
-    if (!quantityInput || !disclosedInput) {
-      console.error('One or both of the fields were not found.');
-      return;
-    }
-    
-    // Debug: log once after DOM content loaded
-    console.log('Quantity and Disclosed Quantity elements found');
-
-    quantityInput.addEventListener('input', function(e) {
-      console.log('Quantity changed: ' + e.target.value); // Debug log
-      disclosedInput.value = e.target.value;
-    });
-  });
-
-  document.addEventListener('DOMContentLoaded', function() {
-  // Get your input elements and form element (make sure the IDs match those in your HTML)
-  const quantityInput = document.getElementById('quantity');
-  const disclosedInput = document.getElementById('disclosed_quantity');
-  const form = document.getElementById('myForm'); // Ensure your form has id="myForm"
-
-  // Function to validate the disclosed quantity (must be at least 10% of quantity)
-  function validateDisclosed() {
-    // Ensure we have a valid number; default to 0
-    const quantity = parseFloat(quantityInput.value) || 0;
-    const disclosed = parseFloat(disclosedInput.value) || 0;
-    const minAllowed = quantity * 0.10;
-
-    if (disclosed < minAllowed) {
-      disclosedInput.setCustomValidity(
-        `Disclosed quantity must be at least 10% of quantity (minimum allowed: ${minAllowed}).`
-      );
-    } else {
-      disclosedInput.setCustomValidity('');
-    }
-  }
-
-  // When quantity changes, update disclosed and validate it.
-  quantityInput.addEventListener('input', function() {
-    disclosedInput.value = this.value;
-    validateDisclosed();
-  });
-
-  // Also validate whenever the user manually changes the disclosed quantity.
-  disclosedInput.addEventListener('input', function() {
-    validateDisclosed();
-  });
-
-  // On form submission, perform the validation check.
-  form.addEventListener('submit', function(event) {
-    validateDisclosed(); // make sure to update validity message
-
-    // If the form is invalid, prevent submission and display validation messages.
-    if (!form.checkValidity()) {
-      event.preventDefault();      // Stop form from submitting
-      form.reportValidity();         // Display the default browser error messages
-    }
-  });
-});
-
-
-
-function checkOrderMode() {
-    const orderMode = document.getElementById("order_mode").value;
-    const isIOC = document.getElementById("is_ioc");
-    const stoplossOrder = document.getElementById("Stoploss_order");
-
-    if (orderMode === "LIMIT") {
-      isIOC.disabled = false;
-      stoplossOrder.disabled = false;
-    } else {
-      isIOC.value = "False"; // Force "No"
-      isIOC.disabled = true;
-
-      stoplossOrder.value = "NO"; // Force "No"
-      stoplossOrder.disabled = true;
-    }
-    handleIOCChange();
-    toggleFields();
-  }
-
-    window.onload = checkOrderMode;
-
-    function updatePrice() {
-      var orderType = document.querySelector('select[name="order_type"]').value;
-      var orderMode = document.querySelector('select[name="order_mode"]').value;
-      var priceField = document.querySelector('input[name="price"]');
-      var priceLabel = document.getElementById('price-label');
-      if (orderMode === 'MARKET') {
-        priceField.disabled = true;
-        priceLabel.textContent = "Price (Auto-Fetched):";
-        if (orderType === 'BUY') {
-          fetch('/orderbook/get_best_ask/')
-            .then(response => {
-              if (!response.ok) { throw new Error('Failed to fetch best ask price'); }
-              return response.json();
-            })
-            .then(data => {
-              if (data.best_ask && data.best_ask.price !== undefined) {
-                priceField.value = data.best_ask.price;
-                priceField.placeholder = data.best_ask.price;
-              } else {
-                priceField.value = 0;
-                priceField.placeholder = "Unavailable";
-                priceField.disabled = true;
-              }
-            })
-            .catch(error => {
-              console.error(error);
-              priceField.value = 'Error fetching price';
-              priceField.placeholder = 'Error fetching price';
-            });
-        } else if (orderType === 'SELL') {
-          fetch('/orderbook/get_best_bid/')
-            .then(response => {
-              if (!response.ok) { throw new Error('Failed to fetch best bid price'); }
-              return response.json();
-            })
-            .then(data => {
-              if (data.best_bid && data.best_bid.price !== undefined) {
-                priceField.value = data.best_bid.price;
-                priceField.placeholder = data.best_bid.price;
-              } else {
-                priceField.value = 'Unavailable';
-                priceField.placeholder = 'Unavailable';
-              }
-            })
-            .catch(error => {
-              console.error(error);
-              priceField.value = 'Error fetching price';
-              priceField.placeholder = 'Error fetching price';
-            });
-        }
-      } else {
-        priceField.disabled = false;
-        priceField.placeholder = 'Enter Value';
-        priceLabel.textContent = "Price (Enter Value):";
-        priceField.value = '';
-      }
-    }
-    function toggleFields() {
-      const stoplossOrder = document.getElementById("Stoploss_order").value;
-      const targetPrice = document.getElementById("Target_price");
-      const targetPriceGroup = document.getElementById("target_price_group");
-      if (stoplossOrder === "YES") {
-        targetPriceGroup.style.display = "block";
-        targetPrice.disabled = false;
-      } else {
-        targetPriceGroup.style.display = "none";
-        targetPrice.value = 0;
-        targetPrice.disabled = true;
-      }
-    }
-
-    function handleIOCChange(){
-      const isIOCSelect=document.querySelector('select[name="is_ioc"]');
-      const isIOC=isIOCSelect.value;
-      const orderModeSelect=document.querySelector('select[name="order_mode"]');
-      const stoplossOrderSelect=document.getElementById("Stoploss_order");
-      const priceField=document.querySelector('input[name="price"]');
-      const priceLabel=document.getElementById('price-label');
-    
-      if (isIOC==="True") {
-        // Set values for orderMode and stoplossOrder
-        orderModeSelect.value="LIMIT";
-        stoplossOrderSelect.value="NO";
-        
-        // Instead of disabling, we'll use hidden fields to ensure values are submitted
-        if (!document.getElementById('hidden_order_mode')) {
-          const hiddenOrderMode=document.createElement('input');
-          hiddenOrderMode.type = 'hidden';
-          hiddenOrderMode.name = 'order_mode';
-          hiddenOrderMode.id = 'hidden_order_mode';
-          hiddenOrderMode.value = 'LIMIT';
-          orderModeSelect.insertAdjacentElement('afterend', hiddenOrderMode);
-        } else {
-          document.getElementById('hidden_order_mode').value = 'LIMIT';
-        }
-        
-        if (!document.getElementById('hidden_stoploss')) {
-          const hiddenStoploss = document.createElement('input');
-          hiddenStoploss.type = 'hidden';
-          hiddenStoploss.name = 'Stoploss_order';
-          hiddenStoploss.id = 'hidden_stoploss';
-          hiddenStoploss.value = 'NO';
-          stoplossOrderSelect.insertAdjacentElement('afterend', hiddenStoploss);
-        } else {
-          document.getElementById('hidden_stoploss').value = 'NO';
-        }
-        
-        // Visually disable but don't actually disable
-        orderModeSelect.style.opacity = '0.6';
-        orderModeSelect.style.pointerEvents = 'none';
-        stoplossOrderSelect.style.opacity = '0.6';
-        stoplossOrderSelect.style.pointerEvents = 'none';
-        
-        // Call toggleFields to handle target price visibility
-        toggleFields();
-        
-        // Ensure price field is set properly
-        priceField.disabled = false;
-        priceField.placeholder = 'Enter Value';
-        priceLabel.textContent = "Price (Enter Value):";
-        priceField.value = '';
-      } else {
-        // Remove hidden fields if they exist
-        const hiddenOrderMode = document.getElementById('hidden_order_mode');
-        const hiddenStoploss = document.getElementById('hidden_stoploss');
-        if (hiddenOrderMode) hiddenOrderMode.remove();
-        if (hiddenStoploss) hiddenStoploss.remove();
-        
-        // Restore visual appearance
-        orderModeSelect.style.opacity = '1';
-        orderModeSelect.style.pointerEvents = 'auto';
-        stoplossOrderSelect.style.opacity = '1';
-        stoplossOrderSelect.style.pointerEvents = 'auto';
-        
-        updatePrice();
-      }
-    }
-    
-    // Additional function to handle form submission
-    function prepareFormSubmission() {
-      const form = document.querySelector('form');
-      const originalSubmit = form.onsubmit;
-      
-      form.onsubmit = function(e) {
-        // If IOC is True, ensure the correct values are set
-        const isIOC = document.querySelector('select[name="is_ioc"]').value;
-        if (isIOC === "True") {
-          const orderModeSelect = document.querySelector('select[name="order_mode"]');
-          const stoplossOrderSelect = document.getElementById("Stoploss_order");
-          
-          // Update the actual selects right before submission
-          orderModeSelect.value = "LIMIT";
-          stoplossOrderSelect.value = "NO";
-          
-          // Make sure they're not disabled so they submit
-          orderModeSelect.disabled = false;
-          stoplossOrderSelect.disabled = false;
-        }
-        
-        // Call original onsubmit if it exists
-        if (originalSubmit) return originalSubmit.call(this, e);
-      };
-    }
-    
-    document.addEventListener('DOMContentLoaded', function() {
-      var orderTypeField = document.querySelector('select[name="order_type"]');
-      var orderModeField = document.querySelector('select[name="order_mode"]');
-      var isIOCField = document.querySelector('select[name="is_ioc"]');
-      var stoplossOrderField = document.getElementById("Stoploss_order");
-      
-      orderTypeField.addEventListener('change', updatePrice);
-      orderModeField.addEventListener('change', updatePrice);
-      isIOCField.addEventListener('change', handleIOCChange);
-      stoplossOrderField.addEventListener('change', toggleFields);
-      
-      // Prepare form submission to ensure correct values
-      prepareFormSubmission();
-      
-      // Initialize UI state
-      handleIOCChange();
-      updatePrice();
-      toggleFields();
-    });
-    function cancelOrder(orderId) {
-      if (!confirm('Confirm cancellation?')) return;
-      
-      const row = document.getElementById(`order-${orderId}`);
-      if (!row) {
-          showFlashMessage('Order not found in list', 'error');
-          return;
-      }
-  
-      // Immediate visual feedback
-      row.style.transition = 'all 0.1s ease';
-      row.style.opacity = '0.5';
-      row.style.transform = 'translateX(30px)';
-  
-      fetch("{% url 'cancel_order' %}", {
-          method: 'POST',
-          headers: {
-              'Content-Type': 'application/json',
-              'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
-          },
-          body: JSON.stringify({ order_id: orderId })
-      })
-      .then(response => {
-          if (!response.ok) throw new Error(`HTTP ${response.status}`);
-          return response.json();
-      })
-      .then(data => {
-          if (data.success) {
-              // Complete the removal animation
-              row.style.opacity = '0';
-              row.style.transform = 'translateX(-100%)';
-              setTimeout(() => row.remove(), 100);
-              
-              // Update counter if exists
-              const counter = document.getElementById('order-count');
-              if (counter) counter.textContent = parseInt(counter.textContent) - 1;
-          }
-      })
-      .catch(error => {
-          console.error('Cancel failed:', error);
-          // Reset visual state
-          row.style.opacity = '1';
-          row.style.transform = 'none';
-          showFlashMessage(error.message || 'Cancellation failed', 'error');
-      });
-  }
-
-  // {% comment %} changes {% endcomment %}
-  function cancelStoplossOrder(orderId) {
-    if (!confirm('Confirm cancellation of stoploss order?')) return;
-    
-    const row = document.getElementById(`stoploss-order-${orderId}`);
-    if (!row) {
-        showFlashMessage('Stoploss order not found in list', 'error');
-        return;
-    }
-  
-    // Immediate visual feedback
-    row.style.transition = 'all 0.1s ease';
-    row.style.opacity = '0.5';
-    row.style.transform = 'translateX(30px)';
-  
-    fetch("{% url 'cancel_stoploss_order' %}", {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
-        },
-        body: JSON.stringify({ order_id: orderId })
-    })
-    .then(response => {
-        if (!response.ok) throw new Error(`HTTP ${response.status}`);
-        return response.json();
-    })
-    .then(data => {
-        if (data.success) {
-            // Complete the removal animation
-            row.style.opacity = '0';
-            row.style.transform = 'translateX(-100%)';
-            setTimeout(() => row.remove(), 100);
-            
-            // Update counter if exists
-            const counter = document.getElementById('stoploss-order-count');
-            if (counter) counter.textContent = parseInt(counter.textContent) - 1;
-        }
-    })
-    .catch(error => {
-        console.error('Cancel failed:', error);
-        // Reset visual state
-        row.style.opacity = '1';
-        row.style.transform = 'none';
-        showFlashMessage(error.message || 'Stoploss order cancellation failed', 'error');
-    });
-  }
-  
-  // CSRF cookie helper function (add this)
-  function getCookie(name) {
-      let cookieValue = null;
-      if (document.cookie && document.cookie !== '') {
-          const cookies = document.cookie.split(';');
-          for (let i = 0; i < cookies.length; i++) {
-              const cookie = cookies[i].trim();
-              if (cookie.startsWith(name + '=')) {
-                  cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                  break;
-              }
-          }
-      }
-      return cookieValue;
-  } 
-
-  //{% comment %} function getCSRFToken() {
-  //  return document.querySelector('[name=csrfmiddlewaretoken]').value;
-// }
-  //  {% endcomment %}
-  // Enhanced flash message display
-  function showFlashMessage(message, type) {
-      const container = document.getElementById('flash-messages') || document.body;
-      const flash = document.createElement('div');
-      
-      flash.className = `flash-message ${type === 'error' ? 'alert-danger' : 'alert-success'}`;
-      flash.innerHTML = `
-          <span class="message-text">${message}</span>
-          <span class="close-btn" onclick="this.parentElement.remove()">&times;</span>
-      `;
-  
-      // Add animation styles
-      flash.style.animation = 'slideIn 0.3s ease-out';
-      container.prepend(flash);
-  
-      // Auto-remove after 5 seconds
-      setTimeout(() => {
-          flash.style.animation = 'slideOut 0.3s ease-in';
-          setTimeout(() => flash.remove(), 300);
-      }, 5000);
-  }
-
-  </script>
 </head>
+
 <body>
-  <div class="container">
-    <div class="card">
-      <h1>Welcome, <span style="color: var(--neon);">{{ user.username }}</span>!</h1>
-      <p>Your trading dashboard is ready. Execute orders with precision and speed.</p>
-    </div>
 
-    {% if messages %}
-    <div id="flash-messagess">
-      <div class="flash-message">
-        {% for message in messages %}
-        <p><span style="color: var(--neon);">{{ message }}</span></p>
-        {% endfor %}
+  <!-- Top Bar -->
+  <div class="topbar">
+    <div class="brand">⚡ OrderBook</div>
+    <div class="user-info">
+      <span>Logged in as</span>
+      <span class="username">{{ user.username }}</span>
+      <div class="nav-links">
+        <a href="{% url 'modify_order' %}">Modify Orders</a>
+        <a href="{% url 'password_reset' %}">Reset Password</a>
+        {% if request.user.is_superuser %}
+        <a href="{% url 'bulk_user_upload' %}">Bulk Upload</a>
+        <a href="{% url 'bulk_user_delete' %}">Bulk Delete</a>
+        <a href="{% url 'orderbook' %}" target="_blank">Order Book</a>
+        {% endif %}
+        <a href="{% url 'market_dashboard' %}">Market Master</a>
       </div>
     </div>
-    <script>
-    document.addEventListener('DOMContentLoaded', function () {
-      const messages = document.querySelectorAll('#flash-messages .alert');
+  </div>
 
-      messages.forEach((msg) => {
-        setTimeout(() => {
-          msg.style.transition = 'opacity 0.5s ease-out';
-          msg.style.opacity = '0';
-          setTimeout(() => msg.remove(), 500);
-        }, 3000); // 3-second lag
-      });
-    });
-  </script>
+  <!-- Market Status Banner -->
+  {% if market %}
+  <div class="market-banner {% if market.is_active %}open{% else %}closed{% endif %}">
+    <div class="market-dot {% if market.is_active %}open{% else %}closed{% endif %}"></div>
+    Market {% if market.is_active %}OPEN{% else %}CLOSED{% endif %}
+    {% if market.last_traded_price %}
+    &nbsp;•&nbsp; LTP: {{ market.last_traded_price }}
     {% endif %}
+  </div>
+  {% endif %}
 
-    <div class="grid-links">
-      
-      <a href="{% url 'modify_order' %}" target="_blank">Modify Order</a>
-      <a href="{% url 'password_reset' %}" >Reset Password</a>
-      {% if request.user.is_superuser %}
-      <a href="{% url 'bulk_user_upload' %}" >Bulk User Upload</a>
-      <a href="{% url 'bulk_user_delete' %}" >Bulk User Deletion</a>
-      <a href="{% url 'orderbook' %}" target="_blank">Order Book</a>
-      {% endif %}
+  <!-- Ticker Bar -->
+  <div class="ticker-bar" id="ticker-bar">
+    <div class="ticker-item">
+      <span class="label">LTP</span>
+      <span class="val cyan" id="t-ltp">{{ market.last_traded_price|default:"—" }}</span>
+    </div>
+    <div class="ticker-item">
+      <span class="label">Day High</span>
+      <span class="val green" id="t-high">{{ market.day_high|default:"—" }}</span>
+    </div>
+    <div class="ticker-item">
+      <span class="label">Day Low</span>
+      <span class="val red" id="t-low">{{ market.day_low|default:"—" }}</span>
+    </div>
+    <div class="ticker-item">
+      <span class="label">Volume</span>
+      <span class="val cyan" id="t-vol">{{ market.total_volume|default:"0" }}</span>
+    </div>
+    <div class="ticker-item">
+      <span class="label">Trades</span>
+      <span class="val cyan" id="t-trades">{{ market.total_trades|default:"0" }}</span>
+    </div>
+  </div>
+
+  <!-- Flash Messages -->
+  {% if messages %}
+  <div class="flash-container" id="flash-container">
+    {% for message in messages %}
+    <div class="flash-msg {% if message.tags == 'error' %}error{% else %}success{% endif %}">
+      <span>{{ message }}</span>
+      <span class="flash-close" onclick="this.parentElement.remove()">✕</span>
+    </div>
+    {% endfor %}
+  </div>
+  <script>
+    setTimeout(() => {
+      document.querySelectorAll('.flash-msg').forEach(el => {
+        el.style.animation = 'slideOut 0.3s ease forwards';
+        setTimeout(() => el.remove(), 300);
+      });
+    }, 4000);
+  </script>
+  {% endif %}
+
+  <!-- Main Content -->
+  <div class="main-content">
+
+    <!-- Order Form -->
+    <div class="card">
+      <div class="card-title">📋 Place Order</div>
+      <form method="post" id="myForm">
+        {% csrf_token %}
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="order_type">Order Type</label>
+            <select name="order_type" class="form-control">
+              <option value="BUY">Buy</option>
+              <option value="SELL">Sell</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="order_mode">Order Mode</label>
+            <select name="order_mode" id="order_mode" class="form-control" onchange="checkOrderMode()">
+              <option value="MARKET">Market</option>
+              <option value="LIMIT">Limit</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="is_ioc">IOC Order</label>
+            <select name="is_ioc" id="is_ioc" class="form-control" onchange="handleIOCChange()">
+              <option value="False">No</option>
+              <option value="True">Yes</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="Stoploss_order">Stop-Loss</label>
+            <select name="Stoploss_order" id="Stoploss_order" class="form-control" onchange="toggleFields()">
+              <option value="NO">No</option>
+              <option value="YES">Yes</option>
+            </select>
+          </div>
+
+          <div class="form-group" id="target_price_group" style="display: none;">
+            <label for="Target_price">Target Price</label>
+            <input type="number" step="0.01" name="Target_price" id="Target_price" class="form-control" disabled>
+          </div>
+
+          <div class="form-group">
+            <label for="quantity">Quantity</label>
+            <input type="number" id="quantity" name="quantity" class="form-control" required min="1">
+          </div>
+
+          <div class="form-group">
+            <label for="disclosed_quantity">Disclosed Qty</label>
+            <input type="number" id="disclosed_quantity" name="disclosed_quantity" class="form-control" required
+              min="1">
+          </div>
+
+          <div class="form-group">
+            <label id="price-label" for="price">Price</label>
+            <input type="number" step="0.01" name="price" class="form-control">
+          </div>
+
+          <button type="submit" class="btn-submit">Submit Order</button>
+        </div>
+      </form>
     </div>
 
-    <form method="post" id="myForm">
-      {% csrf_token %}
-      <h2>Place Order</h2>
-      <div class="input-group">
-        <label for="order_type">Order Type</label>
-        <select name="order_type" class="form-control">
-          <option value="BUY">Buy</option>
-          <option value="SELL">Sell</option>
-        </select>
-      </div>
-
-      <div class="input-group">
-        <label for="order_mode">Order Mode</label>
-        <select name="order_mode" id="order_mode" class="form-control" onchange="checkOrderMode()">
-          <option value="MARKET">Market</option>
-          <option value="LIMIT">Limit</option>
-        </select>
-      </div>
-      
-      <div class="input-group">
-        <label for="is_ioc">Immediate or Cancellation Order</label>
-        <select name="is_ioc" id="is_ioc" class="form-control" onchange="handleIOCChange()">
-          <option value="False">No</option>
-          <option value="True">Yes</option>
-        </select>
-      </div>
-      
-      <div class="input-group">
-        <label for="Stoploss_order">Stoploss Order</label>
-        <select name="Stoploss_order" id="Stoploss_order" class="form-control" onchange="toggleFields()">
-          <option value="NO">No</option>
-          <option value="YES">Yes</option>
-        </select>
-      </div>
-
-      <div class="input-group" id="target_price_group" style="display: none;">
-        <label for="Target_price">Target Price</label>
-        <input type="number" step="0.01" name="Target_price" id="Target_price" class="form-control" disabled>
-      </div>
-      <!-- <div class="input-group">
-        <label for="quantity">Quantity</label>
-        <input type="number" id="quantity" name="quantity" class="form-control" required>
-      </div>
-      <div class="input-group">
-        <label for="disclosed_quantity">Disclosed Quantity</label>
-        <input type="number" id="disclosed_quantity" name="disclosed_quantity" class="form-control" required>
-      </div> -->
-
-      <div class="input-group">
-        <label for="quantity">Quantity</label>
-        <input type="number" id="quantity" name="quantity" class="form-control" required>
-      </div>
-      <div class="input-group">
-        <label for="disclosed_quantity">Disclosed Quantity</label>
-        <input type="number" id="disclosed_quantity" name="disclosed_quantity" class="form-control" required>
-      </div>
-
-
-      {% comment %} <div class="input-group">
-        <label for="is_ioc">Immediate or Cancellation Order</label>
-        <select name="is_ioc" class="form-control">
-          <option value="False">No</option>
-          <option value="True">Yes</option>
-        </select>
-      </div> {% endcomment %}
-      <div class="input-group">
-        <label id="price-label" for="price">Price</label>
-        <input type="number" step="0.01" name="price" class="form-control">
-      </div>
-      <button type="submit" class="btn">Submit Order</button>
-    </form>
-
+    <!-- Active Orders -->
     <div class="card">
-      <h2 class="change positive">Active Orders</h2>
-      <div class="table-container">
+      <div class="card-title">📊 Active Orders</div>
+      <div class="table-wrap">
         {% if orders %}
-        <table class="table">
+        <table>
           <thead>
             <tr>
-              <th>Order Type</th>
-              <th>Order Mode</th>
-              <th>Quantity</th>
+              <th>Type</th>
+              <th>Mode</th>
+              <th>Qty</th>
               <th>Disclosed</th>
-              <th>Original Quantity</th>
+              <th>Orig Qty</th>
               <th>Price</th>
-              <!-- <th>Status</th> -->
               <th>ID</th>
               <th>Action</th>
             </tr>
           </thead>
           <tbody>
             {% for order in orders %}
-              {% if not order.is_matched %}
-                <tr id="order-{{ order.id }}" data-order-id="{{ order.id }}">
-                  <td>{{ order.order_type }}</td>
-                  <td>{{ order.order_mode }}</td>
-                  <td>{{ order.quantity }}</td>
-                  <td>{{ order.disclosed }}</td>
-                  <td>{{ order.original_quantity }}</td>                  
-                  <td>{{ order.price }}</td>
-                  <!-- <td>Unmatched</td> -->
-                  <td>{{ order.id }}</td>
-                  <td>
-                    <button onclick="cancelOrder('{{ order.id }}')"
-                            class="btn btn-danger" 
-                            style="padding: 8px 15px; font-size: 14px;">
-                      Cancel
-                    </button>
-                  </td>
-                </tr>
-              {% endif %}
+            {% if not order.is_matched %}
+            <tr id="order-{{ order.id }}"
+              class="{% if order.order_type == 'BUY' %}buy-row{% else %}sell-row{% endif %}">
+              <td
+                style="color: {% if order.order_type == 'BUY' %}var(--green){% else %}var(--red){% endif %}; font-weight: 600;">
+                {{ order.order_type }}</td>
+              <td>{{ order.order_mode }}</td>
+              <td>{{ order.quantity }}</td>
+              <td>{{ order.disclosed }}</td>
+              <td>{{ order.original_quantity }}</td>
+              <td>{{ order.price }}</td>
+              <td style="color: var(--text-dim);">#{{ order.id }}</td>
+              <td>
+                <button onclick="cancelOrder('{{ order.id }}')" class="btn-cancel">Cancel</button>
+              </td>
+            </tr>
+            {% endif %}
             {% endfor %}
           </tbody>
         </table>
         {% else %}
-        <div class="flash-message alert-warning">
-          <p>No active orders found.</p>
-        </div>
+        <div class="empty-state">No active orders</div>
         {% endif %}
       </div>
     </div>
-    
-    <div class="card">
-      <h2 class="change positive">Completed Trades</h2>
-      <div class="table-container">
+
+    <!-- Completed Trades -->
+    <div class="card full-width">
+      <div class="card-title">✅ Completed Trades</div>
+      <div class="table-wrap">
         {% if trades %}
-        <table class="table">
+        <table>
           <thead>
             <tr>
-              <th>Trade ID</th>
+              <th>ID</th>
               <th>Buyer</th>
               <th>Seller</th>
               <th>Quantity</th>
               <th>Price</th>
-              <th>Timestamp</th>
+              <th>Time</th>
             </tr>
           </thead>
           <tbody>
             {% for trade in trades %}
-              <tr>
-                <td>{{ trade.id }}</td>
-                <td>{{ trade.buyer.username }}</td>
-                <td>{{ trade.seller.username }}</td>
-                <td>{{ trade.quantity }}</td>
-                <td>{{ trade.price }}</td>
-                <td>{{ trade.timestamp }}</td>
-              </tr>
+            <tr>
+              <td>#{{ trade.id }}</td>
+              <td>{{ trade.buyer.username }}</td>
+              <td>{{ trade.seller.username }}</td>
+              <td>{{ trade.quantity }}</td>
+              <td style="color: var(--neon);">{{ trade.price }}</td>
+              <td style="color: var(--text-dim);">{{ trade.timestamp|date:"M d, H:i:s" }}</td>
+            </tr>
             {% endfor %}
           </tbody>
         </table>
         {% else %}
-        <div class="flash-message alert-warning">
-          <p>No completed trades found.</p>
-        </div>
+        <div class="empty-state">No trades yet — trades execute only when buy & sell quantities match exactly</div>
         {% endif %}
       </div>
     </div>
-{% comment %} changes {% endcomment %}
-    <div class="card">
-      <h2 class="change positive">Stoploss Orders</h2>
-      <div class="table-container">
-        {% if stoploss_orders %}
-        <table class="table">
+
+    <!-- Stoploss Orders -->
+    {% if stoploss_orders %}
+    <div class="card full-width">
+      <div class="card-title">🛡 Stop-Loss Orders</div>
+      <div class="table-wrap">
+        <table>
           <thead>
             <tr>
-              <th>Order Type</th>
-              <th>Order Mode</th>
-              <th>Quantity</th>
+              <th>Type</th>
+              <th>Mode</th>
+              <th>Qty</th>
               <th>Disclosed</th>
               <th>Price</th>
-              <th>Target Price</th>
+              <th>Target</th>
               <th>Status</th>
               <th>ID</th>
               <th>Action</th>
@@ -906,40 +713,201 @@ function checkOrderMode() {
           </thead>
           <tbody>
             {% for order in stoploss_orders %}
-              {% if not order.is_matched %}
-                <tr id="stoploss-order-{{ order.id }}" data-order-id="{{ order.id }}">
-                  <td>{{ order.order_type }}</td>
-                  <td>{{ order.order_mode }}</td>
-                  <td>{{ order.quantity }}</td>
-                  <td>{{ order.disclosed }}</td>
-                  <td>{{ order.price }}</td>
-                  <td>{{ order.target_price }}</td>
-                  <td>{% if order.is_matched %}Matched{% else %}Active{% endif %}</td>
-                  <td>{{ order.id }}</td>
-                  <td>
-                    <button onclick="cancelStoplossOrder('{{ order.id }}')" 
-                            class="btn btn-danger" 
-                            style="padding: 8px 15px; font-size: 14px;">
-                      Cancel
-                    </button>
-                  </td>
-                </tr>
-              {% endif %}
+            {% if not order.is_matched %}
+            <tr id="stoploss-order-{{ order.id }}">
+              <td style="color: {% if order.order_type == 'BUY' %}var(--green){% else %}var(--red){% endif %};">{{
+                order.order_type }}</td>
+              <td>{{ order.order_mode }}</td>
+              <td>{{ order.quantity }}</td>
+              <td>{{ order.disclosed }}</td>
+              <td>{{ order.price }}</td>
+              <td style="color: var(--accent);">{{ order.target_price }}</td>
+              <td>Active</td>
+              <td style="color: var(--text-dim);">#{{ order.id }}</td>
+              <td>
+                <button onclick="cancelStoplossOrder('{{ order.id }}')" class="btn-cancel">Cancel</button>
+              </td>
+            </tr>
+            {% endif %}
             {% endfor %}
           </tbody>
-        </table>  
-        {% else %}
-        <!-- <div id="flash-messages" class="flash-message alert-warning">
-          <p>No active stoploss orders found.</p>
-        </div> -->
-        {% endif %}
+        </table>
       </div>
     </div>
-    
-    
-    
-    
+    {% endif %}
 
   </div>
+
+  <script>
+    // Form validation & auto-fill
+    document.addEventListener('DOMContentLoaded', function () {
+      const qtyInput = document.getElementById('quantity');
+      const discInput = document.getElementById('disclosed_quantity');
+      const form = document.getElementById('myForm');
+
+      qtyInput.addEventListener('input', function () {
+        discInput.value = this.value;
+        validateDisclosed();
+      });
+      discInput.addEventListener('input', validateDisclosed);
+
+      function validateDisclosed() {
+        const qty = parseFloat(qtyInput.value) || 0;
+        const disc = parseFloat(discInput.value) || 0;
+        const min = qty * 0.10;
+        if (disc < min) {
+          discInput.setCustomValidity(`Min disclosed: ${min} (10% of qty)`);
+        } else {
+          discInput.setCustomValidity('');
+        }
+      }
+
+      form.addEventListener('submit', function (e) {
+        validateDisclosed();
+        if (!form.checkValidity()) { e.preventDefault(); form.reportValidity(); }
+      });
+
+      // Init
+      checkOrderMode();
+      updatePrice();
+      toggleFields();
+    });
+
+    function checkOrderMode() {
+      const mode = document.getElementById("order_mode").value;
+      const ioc = document.getElementById("is_ioc");
+      const sl = document.getElementById("Stoploss_order");
+      if (mode === "LIMIT") {
+        ioc.disabled = false; sl.disabled = false;
+      } else {
+        ioc.value = "False"; ioc.disabled = true;
+        sl.value = "NO"; sl.disabled = true;
+      }
+      handleIOCChange();
+      toggleFields();
+    }
+
+    function updatePrice() {
+      const type = document.querySelector('select[name="order_type"]').value;
+      const mode = document.querySelector('select[name="order_mode"]').value;
+      const priceField = document.querySelector('input[name="price"]');
+      const priceLabel = document.getElementById('price-label');
+
+      if (mode === 'MARKET') {
+        priceField.disabled = true;
+        priceLabel.textContent = "Price (Auto)";
+        const endpoint = type === 'BUY' ? '/orderbook/get_best_ask/' : '/orderbook/get_best_bid/';
+        const key = type === 'BUY' ? 'best_ask' : 'best_bid';
+        fetch(endpoint).then(r => r.json()).then(data => {
+          if (data[key] && data[key].price !== undefined) {
+            priceField.value = data[key].price;
+          } else {
+            priceField.value = 0;
+            priceField.placeholder = "Unavailable";
+          }
+        }).catch(() => { priceField.value = ''; priceField.placeholder = 'Error'; });
+      } else {
+        priceField.disabled = false;
+        priceField.placeholder = 'Enter price';
+        priceLabel.textContent = "Price";
+        priceField.value = '';
+      }
+    }
+
+    function toggleFields() {
+      const sl = document.getElementById("Stoploss_order").value;
+      const tpGroup = document.getElementById("target_price_group");
+      const tp = document.getElementById("Target_price");
+      if (sl === "YES") {
+        tpGroup.style.display = "block"; tp.disabled = false;
+      } else {
+        tpGroup.style.display = "none"; tp.value = 0; tp.disabled = true;
+      }
+    }
+
+    function handleIOCChange() {
+      const isIOC = document.querySelector('select[name="is_ioc"]').value;
+      const modeSelect = document.querySelector('select[name="order_mode"]');
+      const slSelect = document.getElementById("Stoploss_order");
+      if (isIOC === "True") {
+        modeSelect.value = "LIMIT"; slSelect.value = "NO";
+        modeSelect.style.opacity = '0.5'; modeSelect.style.pointerEvents = 'none';
+        slSelect.style.opacity = '0.5'; slSelect.style.pointerEvents = 'none';
+        toggleFields();
+        const pf = document.querySelector('input[name="price"]');
+        pf.disabled = false; pf.placeholder = 'Enter price';
+        document.getElementById('price-label').textContent = "Price";
+      } else {
+        modeSelect.style.opacity = '1'; modeSelect.style.pointerEvents = 'auto';
+        slSelect.style.opacity = '1'; slSelect.style.pointerEvents = 'auto';
+        updatePrice();
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+      document.querySelector('select[name="order_type"]').addEventListener('change', updatePrice);
+      document.querySelector('select[name="order_mode"]').addEventListener('change', updatePrice);
+    });
+
+    function cancelOrder(orderId) {
+      if (!confirm('Cancel this order?')) return;
+      const row = document.getElementById(`order-${orderId}`);
+      if (row) { row.style.opacity = '0.4'; row.style.transition = 'all 0.3s'; }
+
+      fetch("{% url 'cancel_order' %}", {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value },
+        body: JSON.stringify({ order_id: orderId })
+      })
+        .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
+        .then(data => {
+          if (data.success && row) {
+            row.style.opacity = '0'; row.style.transform = 'translateX(-100%)';
+            setTimeout(() => row.remove(), 300);
+          }
+        })
+        .catch(err => { if (row) { row.style.opacity = '1'; row.style.transform = 'none'; } showFlash(err.message, 'error'); });
+    }
+
+    function cancelStoplossOrder(orderId) {
+      if (!confirm('Cancel this stop-loss order?')) return;
+      const row = document.getElementById(`stoploss-order-${orderId}`);
+      if (row) { row.style.opacity = '0.4'; row.style.transition = 'all 0.3s'; }
+
+      fetch("{% url 'cancel_stoploss_order' %}", {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value },
+        body: JSON.stringify({ order_id: orderId })
+      })
+        .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
+        .then(data => {
+          if (data.success && row) { row.style.opacity = '0'; row.style.transform = 'translateX(-100%)'; setTimeout(() => row.remove(), 300); }
+        })
+        .catch(err => { if (row) { row.style.opacity = '1'; row.style.transform = 'none'; } showFlash(err.message, 'error'); });
+    }
+
+    function showFlash(msg, type) {
+      let c = document.getElementById('flash-container');
+      if (!c) { c = document.createElement('div'); c.id = 'flash-container'; c.className = 'flash-container'; document.body.appendChild(c); }
+      const el = document.createElement('div');
+      el.className = `flash-msg ${type}`;
+      el.innerHTML = `<span>${msg}</span><span class="flash-close" onclick="this.parentElement.remove()">✕</span>`;
+      el.style.animation = 'slideIn 0.3s ease';
+      c.appendChild(el);
+      setTimeout(() => { el.style.animation = 'slideOut 0.3s ease forwards'; setTimeout(() => el.remove(), 300); }, 4000);
+    }
+
+    // Live ticker refresh
+    setInterval(() => {
+      fetch('/market/stats/').then(r => r.json()).then(d => {
+        document.getElementById('t-ltp').textContent = d.last_traded_price || '—';
+        document.getElementById('t-high').textContent = d.day_high || '—';
+        document.getElementById('t-low').textContent = d.day_low || '—';
+        document.getElementById('t-vol').textContent = d.total_volume || '0';
+        document.getElementById('t-trades').textContent = d.total_trades || '0';
+      }).catch(() => { });
+    }, 5000);
+  </script>
 </body>
+
 </html>

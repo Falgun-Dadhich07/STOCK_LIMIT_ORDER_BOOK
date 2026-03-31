@@ -13,8 +13,6 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 import os
 from pathlib import Path
 import dj_database_url
-
-import os 
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -100,25 +98,22 @@ WSGI_APPLICATION = "trading_system.wsgi.application"
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 # Railway injects DATABASE_URL automatically when you add a PostgreSQL service
 
-<<<<<<< HEAD
-DATABASES = { 'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.getenv('DB_NAME'),
-        'USER': os.getenv('DB_USER'),
-        'PASSWORD': os.getenv('DB_PASSWORD'),
-        'HOST': os.getenv('DB_HOST'),
-        'PORT': os.getenv('DB_PORT'),
-        #'OPTIONS': {
-        #    'sslmode': 'require',
-        #}
+# Railway injects DATABASE_URL; fall back to individual env vars for local dev
+if os.environ.get('DATABASE_URL'):
+    DATABASES = {
+        'default': dj_database_url.config(default=os.environ.get('DATABASE_URL'))
     }
-=======
-DATABASES = {
-    'default': dj_database_url.config(
-        default='postgresql://trading_user:password@localhost:5432/trading_platform'
-    )
->>>>>>> cab3581 (Prepare for Railway deployment)
-}
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': os.getenv('DB_NAME', 'trading_platform'),
+            'USER': os.getenv('DB_USER', 'trading_user'),
+            'PASSWORD': os.getenv('DB_PASSWORD', 'password'),
+            'HOST': os.getenv('DB_HOST', 'localhost'),
+            'PORT': os.getenv('DB_PORT', '5432'),
+        }
+    }
 
 
 # Password validation
@@ -157,9 +152,6 @@ CSRF_TRUSTED_ORIGINS = os.environ.get(
     'CSRF_TRUSTED_ORIGINS', 'http://localhost:8000'
 ).split(',')
 
-# <<<<<<< HEAD
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
-
 # Email configuration
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = os.environ.get('EMAIL_HOST', 'mmtp.iitk.ac.in')
@@ -168,4 +160,3 @@ EMAIL_USE_TLS = True
 EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', '')
 EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
-# cab3581 (Prepare for Railway deployment)

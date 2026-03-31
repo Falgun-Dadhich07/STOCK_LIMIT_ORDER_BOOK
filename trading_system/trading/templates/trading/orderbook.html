@@ -1,595 +1,783 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Orderbook Dashboard</title>
-  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Inter:wght@300;400;500;600&display=swap"
+    rel="stylesheet">
   <style>
-    /* Reset & Variables */
     * {
       margin: 0;
       padding: 0;
       box-sizing: border-box;
     }
+
     :root {
-      --bg-color: #0f0f0f;
-      --card-bg: rgba(30, 30, 30, 0.8);
-      --card-border: rgba(255, 255, 255, 0.1);
-      --neon: #0ff;
-      --accent: #ff0;
-      --text-color: #e0e0e0;
-      --highlight-color: #0ff;
+      --bg: #0a0a0f;
+      --card-bg: rgba(20, 20, 35, 0.9);
+      --card-border: rgba(100, 100, 255, 0.12);
+      --neon: #00e5ff;
+      --neon-glow: rgba(0, 229, 255, 0.25);
+      --accent: #7c4dff;
+      --green: #00e676;
+      --green-dim: rgba(0, 230, 118, 0.12);
+      --red: #ff1744;
+      --red-dim: rgba(255, 23, 68, 0.12);
+      --text: #e8e8f0;
+      --text-dim: #6a6a8a;
     }
-    /* Background & Typography */
+
     body {
-      background: linear-gradient(45deg, #000, #1a1a1a, #000);
-      background-size: 400% 400%;
-      animation: gradientBG 15s ease infinite;
-      color: var(--text-color);
-      font-family: 'Orbitron', sans-serif;
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      background-image:
+        radial-gradient(ellipse at 15% 25%, rgba(124, 77, 255, 0.06) 0%, transparent 50%),
+        radial-gradient(ellipse at 85% 75%, rgba(0, 229, 255, 0.04) 0%, transparent 50%);
+      color: var(--text);
       min-height: 100vh;
       padding: 20px;
     }
-    @keyframes gradientBG {
-      0% { background-position: 0% 50%; }
-      50% { background-position: 100% 50%; }
-      100% { background-position: 0% 50%; }
-    }
-    /* Container */
+
     .container {
       max-width: 1400px;
       margin: 0 auto;
-      animation: fadeIn 1s ease-in-out;
+      animation: fadeIn 0.6s ease;
     }
+
     @keyframes fadeIn {
-      from { opacity: 0; }
-      to { opacity: 1; }
+      from {
+        opacity: 0;
+      }
+
+      to {
+        opacity: 1;
+      }
     }
-    /* Dashboard Title */
-    .dashboard-title {
-      text-align: center;
-      margin-bottom: 40px;
-      color: var(--highlight-color);
-      font-size: 2.5rem;
-    }
-    /* Card Style */
-    .card {
+
+    /* Header */
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+      padding: 16px 24px;
       background: var(--card-bg);
       border: 1px solid var(--card-border);
-      border-radius: 16px;
-      padding: 20px;
-      margin-bottom: 20px;
-      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      border-radius: 14px;
     }
-    .card:hover {
-      transform: translateY(-5px);
-      box-shadow: 0px 10px 20px rgba(0, 0, 0, 0.2);
+
+    .header h1 {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 1.3rem;
+      background: linear-gradient(135deg, var(--neon), var(--accent));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
     }
-    .card h4 {
-      color: var(--highlight-color);
-      margin-bottom: 10px;
+
+    .header-actions {
+      display: flex;
+      gap: 10px;
+      align-items: center;
     }
-    /* Table Styling */
-    .table-responsive {
-      overflow-x: auto;
-    }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      background: var(--card-bg);
-      border-radius: 10px;
-      margin-bottom: 20px;
-    }
-    table th, table td {
-      padding: 12px 15px;
-      text-align: center;
+
+    .header-actions a,
+    .header-actions button {
+      text-decoration: none;
+      color: var(--text-dim);
+      font-size: 0.7rem;
+      padding: 7px 14px;
       border: 1px solid var(--card-border);
+      border-radius: 8px;
+      background: transparent;
+      cursor: pointer;
+      font-family: 'Inter', sans-serif;
+      transition: all 0.3s;
     }
-    table th {
-      background: rgba(0, 0, 0, 0.3);
-      color: var(--highlight-color);
+
+    .header-actions a:hover,
+    .header-actions button:hover {
+      color: var(--neon);
+      border-color: var(--neon);
+      background: rgba(0, 229, 255, 0.06);
     }
-    table tbody tr:hover {
-      background: rgba(0,255,255,0.1);
+
+    /* Market Stats */
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 14px;
+      margin-bottom: 24px;
     }
-    /* Section Headings */
-    h3 {
-      color: var(--highlight-color);
-      margin: 20px 0;
+
+    .stat-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      padding: 16px;
       text-align: center;
+      transition: all 0.3s;
     }
-    /* Alert Messages */
-    .alert {
+
+    .stat-card:hover {
+      transform: translateY(-2px);
+      border-color: var(--neon);
+    }
+
+    .stat-card .label {
+      font-size: 0.6rem;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 6px;
+    }
+
+    .stat-card .val {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 1.2rem;
+      font-weight: 700;
+    }
+
+    .stat-card .val.cyan {
+      color: var(--neon);
+    }
+
+    .stat-card .val.green {
+      color: var(--green);
+    }
+
+    .stat-card .val.red {
+      color: var(--red);
+    }
+
+    /* Best Bid/Ask Cards */
+    .bba-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      margin-bottom: 24px;
+    }
+
+    .bba-card {
       background: var(--card-bg);
       border: 1px solid var(--card-border);
       border-radius: 12px;
       padding: 20px;
-      margin-bottom: 20px;
-      box-shadow: 0px 10px 20px rgba(0, 0, 0, 0.2);
+      text-align: center;
     }
-    .alert-success {
-      border-left: 4px solid var(--highlight-color);
+
+    .bba-card.bid {
+      border-top: 3px solid var(--green);
     }
-    .alert-warning {
-      border-left: 4px solid #f39c12;
+
+    .bba-card.ask {
+      border-top: 3px solid var(--red);
     }
-    /* Responsive Grid Layout */
-    .row {
+
+    .bba-card .bba-label {
+      font-size: 0.65rem;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      margin-bottom: 6px;
+    }
+
+    .bba-card .bba-price {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 1.5rem;
+      font-weight: 700;
+    }
+
+    .bba-card.bid .bba-price {
+      color: var(--green);
+    }
+
+    .bba-card.ask .bba-price {
+      color: var(--red);
+    }
+
+    .bba-card .bba-qty {
+      font-size: 0.75rem;
+      color: var(--text-dim);
+      margin-top: 4px;
+    }
+
+    /* Order Tables */
+    .orders-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      margin-bottom: 24px;
+    }
+
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 14px;
+      padding: 20px;
+    }
+
+    .card-header {
       display: flex;
-      flex-wrap: wrap;
-      margin: 0 -10px;
-    }
-    .col {
-      flex: 1;
-      padding: 0 10px;
-      min-width: 300px;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 14px;
     }
 
-    .table-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 8px;
-}
+    .card-header h3 {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 0.8rem;
+      font-weight: 700;
+    }
 
-.table-header button {
-  padding: 6px 12px;
-  background-color: #007bff;
-  border: none;
-  color: white;
-  font-size: 14px;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: background-color 0.2s ease-in-out;
-}
+    .card-header h3.buy-title {
+      color: var(--green);
+    }
 
-.table-header button:hover {
-  background-color: #0056b3;
-}
+    .card-header h3.sell-title {
+      color: var(--red);
+    }
 
+    .card-header button {
+      padding: 5px 12px;
+      border: 1px solid var(--card-border);
+      border-radius: 6px;
+      background: transparent;
+      color: var(--text-dim);
+      font-size: 0.6rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-family: 'Inter', sans-serif;
+    }
+
+    .card-header button:hover {
+      border-color: var(--neon);
+      color: var(--neon);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    table th,
+    table td {
+      padding: 8px 12px;
+      text-align: center;
+      border-bottom: 1px solid rgba(100, 100, 255, 0.08);
+      font-size: 0.72rem;
+    }
+
+    table th {
+      color: var(--text-dim);
+      font-size: 0.6rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    table tr {
+      transition: all 0.2s;
+      cursor: pointer;
+    }
+
+    table tr:hover {
+      background: rgba(0, 229, 255, 0.04);
+    }
+
+    .buy-table td:first-child {
+      color: var(--green);
+    }
+
+    .sell-table td:first-child {
+      color: var(--red);
+    }
+
+    /* Depth bars */
+    .depth-bar {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      opacity: 0.08;
+      transition: width 0.5s ease;
+    }
+
+    .depth-bar.buy {
+      right: 0;
+      background: var(--green);
+    }
+
+    .depth-bar.sell {
+      left: 0;
+      background: var(--red);
+    }
+
+    td.depth-cell {
+      position: relative;
+    }
+
+    /* Trades */
+    .full-width {
+      grid-column: 1 / -1;
+    }
+
+    /* Modal */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(4px);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal-content {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 14px;
+      padding: 24px;
+      max-width: 600px;
+      width: 90%;
+      max-height: 80vh;
+      overflow: auto;
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+
+    .modal-header h4 {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 0.85rem;
+      color: var(--neon);
+    }
+
+    .modal-close {
+      background: none;
+      border: none;
+      color: var(--text-dim);
+      font-size: 1.5rem;
+      cursor: pointer;
+    }
+
+    .modal-close:hover {
+      color: var(--text);
+    }
+
+    /* Pulse animation for new data */
+    @keyframes newRow {
+      0% {
+        background: rgba(0, 229, 255, 0.15);
+      }
+
+      100% {
+        background: transparent;
+      }
+    }
+
+    .new-row {
+      animation: newRow 1s ease;
+    }
+
+    .live-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--green);
+      display: inline-block;
+      animation: blink 2s infinite;
+      margin-right: 6px;
+    }
+
+    @keyframes blink {
+
+      0%,
+      100% {
+        opacity: 1;
+      }
+
+      50% {
+        opacity: 0.3;
+      }
+    }
+
+    @media (max-width: 768px) {
+
+      .orders-row,
+      .bba-row {
+        grid-template-columns: 1fr;
+      }
+    }
   </style>
 </head>
+
 <body>
   <div class="container">
-    <h2 class="dashboard-title">Orderbook Dashboard</h2>
-
-    <!-- Best Bid and Best Ask Cards -->
-    <div class="row">
-      <div class="col">
-        <div class="card">
-          <h4>Best Bid</h4>
-          <p id="best-bid">Waiting for update...</p>
-        </div>
-      </div>
-      <div class="col">
-        <div class="card">
-          <h4>Best Ask</h4>
-          <p id="best-ask">Waiting for update...</p>
-        </div>
+    <!-- Header -->
+    <div class="header">
+      <h1>📈 Orderbook</h1>
+      <div class="header-actions">
+        <span style="color: var(--text-dim); font-size: 0.7rem;"><span class="live-dot"></span>Live</span>
+        <a href="{% url 'home' %}">Dashboard</a>
+        {% if request.user.is_superuser %}
+        <a href="{% url 'market_dashboard' %}">Market Master</a>
+        {% endif %}
       </div>
     </div>
 
-    <!-- Buy and Sell Orders -->
-    <div class="row">
-      <div class="col">
-        <div class="table-responsive">
-          <table id="buy-orders">
-            <div class="table-header">
-              <h3>Buy Orders</h3>
-              <button onclick="downloadBuyOrdersCSV()">⬇ Download CSV</button>
-            </div>
-            
-            <thead>
-              <tr><th>Price</th><th>Quantity</th></tr>
-            </thead>
-            <tbody><tr><td colspan="2">Waiting for update...</td></tr></tbody>
-          </table>
-        </div>
+    <!-- Market Stats -->
+    <div class="stats-row" id="market-stats">
+      <div class="stat-card">
+        <div class="label">Last Traded</div>
+        <div class="val cyan" id="s-ltp">{{ market.last_traded_price|default:"—" }}</div>
       </div>
-      <div class="col">
-
-        <div class="table-header">
-          <h3>Sell Orders</h3>
-          <button onclick="downloadSellOrdersCSV()">⬇ Download CSV</button>
-        </div>
-        <div class="table-responsive">
-          <table id="sell-orders">
-            <thead>
-              <tr><th>Price</th><th>Quantity</th></tr>
-            </thead>
-            <tbody><tr><td colspan="2">Waiting for update...</td></tr></tbody>
-          </table>
-        </div>
+      <div class="stat-card">
+        <div class="label">Day High</div>
+        <div class="val green" id="s-high">{{ market.day_high|default:"—" }}</div>
+      </div>
+      <div class="stat-card">
+        <div class="label">Day Low</div>
+        <div class="val red" id="s-low">{{ market.day_low|default:"—" }}</div>
+      </div>
+      <div class="stat-card">
+        <div class="label">Volume</div>
+        <div class="val cyan" id="s-vol">{{ market.total_volume|default:"0" }}</div>
+      </div>
+      <div class="stat-card">
+        <div class="label">Trades</div>
+        <div class="val cyan" id="s-trades">{{ market.total_trades|default:"0" }}</div>
       </div>
     </div>
 
-    
-    
-    
+    <!-- Best Bid / Ask -->
+    <div class="bba-row">
+      <div class="bba-card bid">
+        <div class="bba-label">Best Bid</div>
+        <div class="bba-price" id="best-bid">—</div>
+        <div class="bba-qty" id="best-bid-qty"></div>
+      </div>
+      <div class="bba-card ask">
+        <div class="bba-label">Best Ask</div>
+        <div class="bba-price" id="best-ask">—</div>
+        <div class="bba-qty" id="best-ask-qty"></div>
+      </div>
+    </div>
 
-
-    <!-- Order Details Modal -->
-<div id="order-modal" style="
-display: none;
-position: fixed;
-top: 0; left: 0;
-width: 100%; height: 100%;
-background: rgba(0,0,0,0.5);
-align-items: center; justify-content: center;
-">
-<div style="
-  background: #111;
-  padding: 1rem;
-  border-radius: 8px;
-  max-width: 90%;
-  max-height: 90%;
-  overflow: auto;
-  color: #fff;
-">
-<button id="modal-close" style="
- float: right;
- background: none;
- border: none;
- color: #aaa;
- font-size: 1.5rem;
- cursor: pointer;
-">&times;</button>
-<h4>Order Details at <span id="modal-price"></span></h4>
-<table id="modal-table" style="width:100%; border-collapse: collapse;">
- <thead>
-   <tr>
-     <th>User</th>
-     <th>Quantity</th>
-     <th>Disclosed</th>
-     <th>Original_quantity</th>
-   </tr>
- </thead>
- <tbody></tbody>
-</table>
-</div>
-</div>
-
+    <!-- Buy / Sell Orders -->
+    <div class="orders-row">
+      <div class="card">
+        <div class="card-header">
+          <h3 class="buy-title">Buy Orders</h3>
+          <button onclick="downloadBuyOrdersCSV()">⬇ CSV</button>
+        </div>
+        <table id="buy-orders" class="buy-table">
+          <thead>
+            <tr>
+              <th>Price</th>
+              <th>Quantity</th>
+              <th>Disclosed</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td colspan="3" style="color:var(--text-dim)">Loading...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <h3 class="sell-title">Sell Orders</h3>
+          <button onclick="downloadSellOrdersCSV()">⬇ CSV</button>
+        </div>
+        <table id="sell-orders" class="sell-table">
+          <thead>
+            <tr>
+              <th>Price</th>
+              <th>Quantity</th>
+              <th>Disclosed</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td colspan="3" style="color:var(--text-dim)">Loading...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
 
     <!-- Recent Trades -->
-    <div class="row">
-      <div class="col" style="flex: 100%;">
-        <div class="table-header">
-          <h3>Recent Trades</h3>
-          <button onclick="downloadTradesCSV()">⬇ Download csv</button>
-        </div>
-        
-        <div class="table-responsive">
-          <table id="trades">
-            <thead>
-              <tr>
-                <th>Buyer</th><th>Seller</th><th>Price</th><th>Quantity</th><th>Timestamp</th>
-              </tr>
-            </thead>
-            <tbody><tr><td colspan="5">Waiting for update...</td></tr></tbody>
-          </table>
-        </div>
+    <div class="card">
+      <div class="card-header">
+        <h3 style="color: var(--neon);">Recent Trades</h3>
+        <button onclick="downloadTradesCSV()">⬇ CSV</button>
       </div>
+      <table id="trades">
+        <thead>
+          <tr>
+            <th>Buyer</th>
+            <th>Seller</th>
+            <th>Price</th>
+            <th>Qty</th>
+            <th>Time</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td colspan="5" style="color:var(--text-dim)">Loading...</td>
+          </tr>
+        </tbody>
+      </table>
     </div>
   </div>
 
-  <!-- WebSocket Connection -->
+  <!-- Order Details Modal -->
+  <div class="modal-overlay" id="order-modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h4>Orders at <span id="modal-price"></span></h4>
+        <button class="modal-close" id="modal-close">&times;</button>
+      </div>
+      <table id="modal-table">
+        <thead>
+          <tr>
+            <th>User</th>
+            <th>Quantity</th>
+            <th>Disclosed</th>
+            <th>Orig Qty</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+
   <script>
+    let buyOrdersByPrice = {};
+    let sellOrdersByPrice = {};
+
+    // ===== Data Fetching =====
     function updateBestBid() {
-      fetch('get_best_bid/')
-        .then(response => response.json())
-        .then(data => {
-          const bestBidContainer = document.querySelector('#best-bid');
-          if (data.best_bid && data.best_bid.price !== null) {
-            bestBidContainer.innerHTML = `Price: ${data.best_bid.price} | Quantity: ${data.best_bid.disclosed}`;
-          } else {
-            bestBidContainer.innerHTML = 'No bids available';
-          }
-        })
-        .catch(error => console.error('Error fetching Best Bid:', error));
+      fetch('get_best_bid/').then(r => r.json()).then(data => {
+        const el = document.getElementById('best-bid');
+        const qel = document.getElementById('best-bid-qty');
+        if (data.best_bid && data.best_bid.price !== null) {
+          el.textContent = data.best_bid.price;
+          qel.textContent = `Qty: ${data.best_bid.disclosed}`;
+        } else { el.textContent = '—'; qel.textContent = ''; }
+      });
     }
 
     function updateBestAsk() {
-      fetch('get_best_ask/')
-        .then(response => response.json())
-        .then(data => {
-          const bestAskContainer = document.querySelector('#best-ask');
-          if (data.best_ask && data.best_ask.price !== null) {
-            bestAskContainer.innerHTML = `Price: ${data.best_ask.price} | Quantity: ${data.best_ask.disclosed}`;
-          } else {
-            bestAskContainer.innerHTML = 'No asks available';
-          }
-        })
-        .catch(error => console.error('Error fetching Best Ask:', error));
+      fetch('get_best_ask/').then(r => r.json()).then(data => {
+        const el = document.getElementById('best-ask');
+        const qel = document.getElementById('best-ask-qty');
+        if (data.best_ask && data.best_ask.price !== null) {
+          el.textContent = data.best_ask.price;
+          qel.textContent = `Qty: ${data.best_ask.disclosed}`;
+        } else { el.textContent = '—'; qel.textContent = ''; }
+      });
     }
 
-function downloadBuyOrdersCSV() {
-  fetch('get_buy_orders/')
-    .then(response => response.json())
-    .then(data => {
-      const buyOrders = data.buy_orders;
-      const headers = ["price", "quantity", "disclosed", "user", "original_quantity"];
-      const rows = buyOrders.map(order => headers.map(h => {
-        let val = order[h];
-        return `"${(val ?? "").toString().replace(/"/g, '""')}"`;
-      }).join(','));
-
-      const csv = [headers.join(','), ...rows].join('\r\n');
-      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = 'buy_orders.csv';
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-    })
-    .catch(err => console.error('Error generating CSV:', err));
-}
-
-function downloadSellOrdersCSV() {
-  fetch('get_sell_orders/')
-    .then(response => response.json())
-    .then(data => {
-      const sellOrders = data.sell_orders;
-      const headers = ["price", "quantity", "disclosed", "user", "original_quantity"];
-      const rows = sellOrders.map(order => headers.map(h => {
-        let val = order[h];
-        return `"${(val ?? "").toString().replace(/"/g, '""')}"`;
-      }).join(','));
-
-      const csv = [headers.join(','), ...rows].join('\r\n');
-      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = 'sell_orders.csv';
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-    })
-    .catch(err => console.error('Error generating CSV:', err));
-}
-
-
-
-let buyOrdersByPrice = {};
-
-// call this once on page load (or whenever you need)
-function updateBuyOrders() {
-  fetch('get_buy_orders/')
-    .then(r => r.json())
-    .then(data => {
-      const tbody = document.querySelector('#buy-orders tbody');
-      tbody.innerHTML = '';
-      buyOrdersByPrice = {};
-
-      // 1. group & stash raw orders
-      const grouped = {};
-      data.buy_orders
-        .filter(o => !o.is_ioc)
-        .forEach(o => {
-          const price = parseFloat(o.price).toFixed(2);
-          const qty   = parseFloat(o.quantity)  || 0;
-          const disc  = parseFloat(o.disclosed) || 0;
-
-          // grouping sums
-          if (!grouped[price]) grouped[price] = { quantity: 0, disclosed: 0 };
-          grouped[price].quantity  += qty;
-          grouped[price].disclosed += disc;
-
-          // keep list of raw orders
-          if (!buyOrdersByPrice[price]) buyOrdersByPrice[price] = [];
-          buyOrdersByPrice[price].push(o);
+    function updateBuyOrders() {
+      fetch('get_buy_orders/').then(r => r.json()).then(data => {
+        const tbody = document.querySelector('#buy-orders tbody');
+        tbody.innerHTML = '';
+        buyOrdersByPrice = {};
+        const grouped = {};
+        data.buy_orders.filter(o => !o.is_ioc).forEach(o => {
+          const p = parseFloat(o.price).toFixed(2);
+          if (!grouped[p]) grouped[p] = { quantity: 0, disclosed: 0 };
+          grouped[p].quantity += parseFloat(o.quantity) || 0;
+          grouped[p].disclosed += parseFloat(o.disclosed) || 0;
+          if (!buyOrdersByPrice[p]) buyOrdersByPrice[p] = [];
+          buyOrdersByPrice[p].push(o);
         });
-
-      // 2. render rows & attach click
-      Object.entries(grouped)
-        .sort((a,b) => parseFloat(b[0]) - parseFloat(a[0]))
-        .forEach(([price, {quantity, disclosed}]) => {
+        const maxQty = Math.max(...Object.values(grouped).map(g => g.quantity), 1);
+        Object.entries(grouped).sort((a, b) => parseFloat(b[0]) - parseFloat(a[0])).forEach(([price, { quantity, disclosed }]) => {
           const tr = document.createElement('tr');
           tr.style.cursor = 'pointer';
-          tr.innerHTML = `
-            <td>${price}</td>
-            <td>${quantity}</td>
-            <td>${disclosed}</td>
-          `;
+          const pct = (quantity / maxQty * 100).toFixed(0);
+          tr.innerHTML = `<td>${price}</td><td style="position:relative;"><div class="depth-bar buy" style="width:${pct}%"></div>${quantity}</td><td>${disclosed}</td>`;
           tr.addEventListener('click', () => showOrderDetails(price, 'buy'));
           tbody.appendChild(tr);
         });
-    })
-    .catch(console.error);
-}
+      });
+    }
 
-function showOrderDetails(price, side) {
-  // pick the right map
-  const map = side === 'sell'
-    ? sellOrdersByPrice
-    : buyOrdersByPrice;
-
-  const orders = map[price] || [];
-  const modal      = document.getElementById('order-modal');
-  const tbody      = modal.querySelector('#modal-table tbody');
-  const priceSpan  = document.getElementById('modal-price');
-
-  priceSpan.textContent = price;
-  tbody.innerHTML = '';
-
-  orders.forEach(o => {
-    const row = document.createElement('tr');
-    row.innerHTML = `
-      <td>${o.user || 'N/A'}</td>
-      <td>${parseFloat(o.quantity)  || 0}</td>
-      <td>${parseFloat(o.disclosed) || 0}</td>
-      <td>${o.original_quantity}</td>
-      
-    `;
-    tbody.appendChild(row);
-  });
-
-  modal.style.display = 'flex';
-}
-
-// close button
-document.getElementById('modal-close')
-        .addEventListener('click', () => {
-  document.getElementById('order-modal').style.display = 'none';
-});
-
-
-
-let sellOrdersByPrice = {};
-function updateSellOrders() {
-  fetch('get_sell_orders/')
-    .then(r => r.json())
-    .then(data => {
-      const tbody = document.querySelector('#sell-orders tbody');
-      tbody.innerHTML = '';
-      sellOrdersByPrice = {};
-
-      // 1) Group & store raw:
-      const grouped = {};
-      data.sell_orders
-        .filter(o => !o.is_ioc)
-        .forEach(o => {
-          const price     = parseFloat(o.price).toFixed(2);
-          const qty       = parseFloat(o.quantity)  || 0;
-          const disclosed = parseFloat(o.disclosed) || 0;
-
-          // sums for the row
-          if (!grouped[price]) grouped[price] = { quantity: 0, disclosed: 0 };
-          grouped[price].quantity  += qty;
-          grouped[price].disclosed += disclosed;
-
-          // stash raw for modal
-          if (!sellOrdersByPrice[price]) sellOrdersByPrice[price] = [];
-          sellOrdersByPrice[price].push(o);
+    function updateSellOrders() {
+      fetch('get_sell_orders/').then(r => r.json()).then(data => {
+        const tbody = document.querySelector('#sell-orders tbody');
+        tbody.innerHTML = '';
+        sellOrdersByPrice = {};
+        const grouped = {};
+        data.sell_orders.filter(o => !o.is_ioc).forEach(o => {
+          const p = parseFloat(o.price).toFixed(2);
+          if (!grouped[p]) grouped[p] = { quantity: 0, disclosed: 0 };
+          grouped[p].quantity += parseFloat(o.quantity) || 0;
+          grouped[p].disclosed += parseFloat(o.disclosed) || 0;
+          if (!sellOrdersByPrice[p]) sellOrdersByPrice[p] = [];
+          sellOrdersByPrice[p].push(o);
         });
-
-      // 2) Render sorted rows (lowest price first)
-      Object.entries(grouped)
-        .sort((a, b) => parseFloat(a[0]) - parseFloat(b[0]))
-        .forEach(([price, { quantity, disclosed }]) => {
+        const maxQty = Math.max(...Object.values(grouped).map(g => g.quantity), 1);
+        Object.entries(grouped).sort((a, b) => parseFloat(a[0]) - parseFloat(b[0])).forEach(([price, { quantity, disclosed }]) => {
           const tr = document.createElement('tr');
           tr.style.cursor = 'pointer';
-          tr.innerHTML = `
-            <td>${price}</td>
-            <td>${quantity}</td>
-            <td>${disclosed}</td>
-          `;
-          // wire up click to reuse the same modal:
+          const pct = (quantity / maxQty * 100).toFixed(0);
+          tr.innerHTML = `<td>${price}</td><td style="position:relative;"><div class="depth-bar sell" style="width:${pct}%"></div>${quantity}</td><td>${disclosed}</td>`;
           tr.addEventListener('click', () => showOrderDetails(price, 'sell'));
           tbody.appendChild(tr);
         });
-    })
-    .catch(console.error);
-}
-
-
-
-
-    function updateRecentTrades() {
-      fetch('get_recent_trades/')
-        .then(response => response.json())
-        .then(data => {
-          const tableBody = document.querySelector('#trades tbody');
-          tableBody.innerHTML = '';
-          data.trades.forEach(trade => {
-            const row = `
-              <tr>
-                <td>${trade.buyer}</td>
-                <td>${trade.seller}</td>
-                <td>${trade.price}</td>
-                <td>${trade.quantity}</td>
-                <td>${trade.timestamp}</td>
-              </tr>`;
-            tableBody.innerHTML += row;
-          });
-        })
-        .catch(error => console.error('Error fetching Recent Trades:', error));
+      });
     }
 
-    document.addEventListener('DOMContentLoaded', function (){
-      updateBuyOrders();
-      updateSellOrders();
-      updateRecentTrades();
-      updateBestBid();
-      updateBestAsk();
+    function updateRecentTrades() {
+      fetch('get_recent_trades/').then(r => r.json()).then(data => {
+        const tbody = document.querySelector('#trades tbody');
+        tbody.innerHTML = '';
+        data.trades.forEach(t => {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `<td>${t.buyer}</td><td>${t.seller}</td><td style="color:var(--neon)">${t.price}</td><td>${t.quantity}</td><td style="color:var(--text-dim)">${t.timestamp}</td>`;
+          tbody.appendChild(tr);
+        });
+        if (!data.trades.length) tbody.innerHTML = '<tr><td colspan="5" style="color:var(--text-dim)">No trades yet</td></tr>';
+      });
+    }
+
+    function updateMarketStats() {
+      fetch('/market/stats/').then(r => r.json()).then(d => {
+        document.getElementById('s-ltp').textContent = d.last_traded_price || '—';
+        document.getElementById('s-high').textContent = d.day_high || '—';
+        document.getElementById('s-low').textContent = d.day_low || '—';
+        document.getElementById('s-vol').textContent = d.total_volume || '0';
+        document.getElementById('s-trades').textContent = d.total_trades || '0';
+      }).catch(() => { });
+    }
+
+    // ===== Modal =====
+    function showOrderDetails(price, side) {
+      const map = side === 'sell' ? sellOrdersByPrice : buyOrdersByPrice;
+      const orders = map[price] || [];
+      const modal = document.getElementById('order-modal');
+      const tbody = modal.querySelector('#modal-table tbody');
+      document.getElementById('modal-price').textContent = price;
+      tbody.innerHTML = '';
+      orders.forEach(o => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td>${o.user || 'N/A'}</td><td>${o.quantity || 0}</td><td>${o.disclosed || 0}</td><td>${o.original_quantity || 0}</td>`;
+        tbody.appendChild(tr);
+      });
+      modal.style.display = 'flex';
+    }
+    document.getElementById('modal-close').addEventListener('click', () => {
+      document.getElementById('order-modal').style.display = 'none';
     });
+
+    // ===== CSV Downloads =====
+    function downloadCSV(data, headers, filename) {
+      const rows = data.map(item => headers.map(h => `"${(item[h] ?? '').toString().replace(/"/g, '""')}"`).join(','));
+      const csv = [headers.join(','), ...rows].join('\r\n');
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    }
+
+    function downloadBuyOrdersCSV() {
+      fetch('get_buy_orders/').then(r => r.json()).then(data => {
+        downloadCSV(data.buy_orders, ['price', 'quantity', 'disclosed', 'user', 'original_quantity'], 'buy_orders.csv');
+      });
+    }
+    function downloadSellOrdersCSV() {
+      fetch('get_sell_orders/').then(r => r.json()).then(data => {
+        downloadCSV(data.sell_orders, ['price', 'quantity', 'disclosed', 'user', 'original_quantity'], 'sell_orders.csv');
+      });
+    }
+    function downloadTradesCSV() {
+      fetch('get_recent_trades/').then(r => r.json()).then(data => {
+        downloadCSV(data.trades, ['buyer', 'seller', 'price', 'quantity', 'timestamp'], 'trades.csv');
+      });
+    }
+
+    // ===== Init & WebSocket =====
+    document.addEventListener('DOMContentLoaded', () => {
+      updateBuyOrders(); updateSellOrders(); updateRecentTrades(); updateBestBid(); updateBestAsk(); updateMarketStats();
+    });
+
+    // Auto-refresh polling
+    setInterval(() => { updateMarketStats(); }, 5000);
+
+    // WebSocket for real-time updates
     const ws_scheme = window.location.protocol === "https:" ? "wss" : "ws";
     const socket = new WebSocket(`${ws_scheme}://${window.location.host}/ws/orderbook/`);
-  
-    socket.onopen = () => {
-      console.log("WebSocket connection established");
-    };
-  
+
+    socket.onopen = () => console.log("WebSocket connected");
     socket.onmessage = (event) => {
       const raw = JSON.parse(event.data);
-      const data = raw.data || raw;  // Extract the actual payload (for both snapshot or update)
-  
-      // Debug
-      console.log("Received WebSocket data:", raw);
-  
-      // Hide "Waiting for update..." if you have it
-      const statusEl = document.getElementById("status");
-      if (statusEl) statusEl.innerText = "Live";
-  
-      // Update best bid
+      const data = raw.data || raw;
+
       if (data.best_bid) {
-        document.getElementById("best-bid").innerText = `Price: ${data.best_bid.price} | Quantity: ${data.best_bid.disclosed}`;
+        document.getElementById("best-bid").textContent = data.best_bid.price;
+        document.getElementById("best-bid-qty").textContent = `Qty: ${data.best_bid.disclosed}`;
       }
-  
-      // Update best ask
       if (data.best_ask) {
-        document.getElementById("best-ask").innerText = `Price: ${data.best_ask.price} | Quantity: ${data.best_ask.disclosed}`;
+        document.getElementById("best-ask").textContent = data.best_ask.price;
+        document.getElementById("best-ask-qty").textContent = `Qty: ${data.best_ask.disclosed}`;
       }
-  
-      // Update buy orders table
       if (data.buy_orders) {
-        const buyOrdersTable = document.querySelector("#buy-orders tbody");
-        buyOrdersTable.innerHTML = "";
-        data.buy_orders.forEach(order => {
-          buyOrdersTable.innerHTML += `<tr><td>${order.price}</td><td>${order.disclosed}</td></tr>`;
+        const tbody = document.querySelector("#buy-orders tbody");
+        tbody.innerHTML = "";
+        data.buy_orders.forEach(o => {
+          const tr = document.createElement('tr');
+          tr.className = 'new-row';
+          tr.innerHTML = `<td>${o.price}</td><td>${o.disclosed}</td><td></td>`;
+          tbody.appendChild(tr);
         });
       }
-  
-      // Update sell orders table
       if (data.sell_orders) {
-        const sellOrdersTable = document.querySelector("#sell-orders tbody");
-        sellOrdersTable.innerHTML = "";
-        data.sell_orders.forEach(order => {
-          sellOrdersTable.innerHTML += `<tr><td>${order.price}</td><td>${order.disclosed}</td></tr>`;
+        const tbody = document.querySelector("#sell-orders tbody");
+        tbody.innerHTML = "";
+        data.sell_orders.forEach(o => {
+          const tr = document.createElement('tr');
+          tr.className = 'new-row';
+          tr.innerHTML = `<td>${o.price}</td><td>${o.disclosed}</td><td></td>`;
+          tbody.appendChild(tr);
         });
       }
-  
-      // Update trades table
       if (data.trades) {
-        const tradesTable = document.querySelector("#trades tbody");
-        tradesTable.innerHTML = "";
-        data.trades.forEach(trade => {
-          tradesTable.innerHTML += `
-            <tr>
-              <td>${trade.buyer}</td>
-              <td>${trade.seller}</td>
-              <td>${trade.price}</td>
-              <td>${trade.quantity}</td>
-              <td>${trade.timestamp || '-'}</td>
-            </tr>`;
+        const tbody = document.querySelector("#trades tbody");
+        tbody.innerHTML = "";
+        data.trades.forEach(t => {
+          const tr = document.createElement('tr');
+          tr.className = 'new-row';
+          tr.innerHTML = `<td>${t.buyer}</td><td>${t.seller}</td><td style="color:var(--neon)">${t.price}</td><td>${t.quantity}</td><td style="color:var(--text-dim)">${t.timestamp || '-'}</td>`;
+          tbody.appendChild(tr);
         });
       }
+      if (data.market) {
+        document.getElementById('s-ltp').textContent = data.market.last_traded_price || '—';
+        document.getElementById('s-high').textContent = data.market.day_high || '—';
+        document.getElementById('s-low').textContent = data.market.day_low || '—';
+        document.getElementById('s-vol').textContent = data.market.total_volume || '0';
+        document.getElementById('s-trades').textContent = data.market.total_trades || '0';
+      }
     };
-  
-    socket.onerror = (error) => {
-      console.log("WebSocket Error: ", error);
-    };
-  
-    socket.onclose = (event) => {
-      console.log("WebSocket connection closed: ", event);
-      const statusEl = document.getElementById("status");
-      if (statusEl) statusEl.innerText = "Disconnected";
-    };
-  </script>  
+    socket.onerror = (e) => console.error("WebSocket error:", e);
+    socket.onclose = (e) => console.log("WebSocket closed:", e);
+  </script>
 </body>
+
 </html>

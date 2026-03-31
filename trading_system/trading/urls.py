@@ -15,13 +15,16 @@ urlpatterns = [
     path('orderbook/get_buy_orders/', views.get_buy_orders, name='get_buy_orders'),
     path('orderbook/get_sell_orders/', views.get_sell_orders, name='get_sell_orders'),
     path('orderbook/get_recent_trades/', views.get_recent_trades, name='get_recent_trades'),
-    path('orderbook/get_best_ask/', views.get_best_ask, name='get_best_ask'),
-    path('modify/get_best_bid/', views.get_best_bid, name='get_best_bid'),
-    path('modify/get_buy_orders/', views.get_buy_orders, name='get_buy_orders'),
-    path('modify/get_sell_orders/', views.get_sell_orders, name='get_sell_orders'),
+    path('modify/get_best_bid/', views.get_best_bid, name='modify_get_best_bid'),
+    path('modify/get_buy_orders/', views.get_buy_orders, name='modify_get_buy_orders'),
+    path('modify/get_sell_orders/', views.get_sell_orders, name='modify_get_sell_orders'),
     path('modify_order/', views.modify_order_page, name='modify_order'),
     path('modify_order/update_prev_order/', views.update_prev_order, name='update_prev_order'),
     path('cancel_order/', views.cancel_order, name='cancel_order'),
     path('cancel_stoploss_order/', views.cancel_stoploss_order, name='cancel_stoploss_order'),
+    # Market Master routes
+    path('market/', views.market_dashboard, name='market_dashboard'),
+    path('market/toggle/', views.toggle_market, name='toggle_market'),
+    path('market/stats/', views.get_market_stats, name='market_stats'),
+    path('trades/download/', views.download_trades_csv, name='download_trades_csv'),
 ]
-
