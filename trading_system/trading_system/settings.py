@@ -96,12 +96,33 @@ WSGI_APPLICATION = "trading_system.wsgi.application"
 
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
-# Railway injects DATABASE_URL automatically when you add a PostgreSQL service
+#
+# Priority order:
+#   1. DATABASE_URL (Railway PostgreSQL plugin, Heroku, etc.)
+#   2. PGHOST / PGPORT / PGDATABASE / PGUSER / PGPASSWORD (also injected by Railway)
+#   3. Individual DB_* env vars (local dev)
 
-# Railway injects DATABASE_URL; fall back to individual env vars for local dev
-if os.environ.get('DATABASE_URL'):
+_database_url = os.environ.get('DATABASE_URL') or os.environ.get('POSTGRES_URL')
+_pghost = os.environ.get('PGHOST') or os.environ.get('RAILWAY_TCP_PROXY_DOMAIN')
+
+if _database_url:
     DATABASES = {
-        'default': dj_database_url.config(default=os.environ.get('DATABASE_URL'))
+        'default': dj_database_url.config(
+            default=_database_url,
+            conn_max_age=600,
+        )
+    }
+elif _pghost:
+    # Railway also exports individual PG* variables — use them directly
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': os.environ.get('PGDATABASE', 'railway'),
+            'USER': os.environ.get('PGUSER', 'postgres'),
+            'PASSWORD': os.environ.get('PGPASSWORD', ''),
+            'HOST': _pghost,
+            'PORT': os.environ.get('PGPORT', '5432'),
+        }
     }
 else:
     DATABASES = {
