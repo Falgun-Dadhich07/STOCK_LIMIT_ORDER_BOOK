@@ -23,15 +23,11 @@ COPY . .
 # Set working directory to Django project
 WORKDIR /app/trading_system
 
-# Collect static files (optional, if needed)
-RUN python manage.py collectstatic --noinput 2>/dev/null || true
+# Collect static files (whitenoise serves them, no DB needed for this step)
+RUN SECRET_KEY=collectstatic-build-only python manage.py collectstatic --noinput 2>/dev/null || true
 
 # Expose port (Railway sets PORT dynamically)
 EXPOSE ${PORT:-8000}
-
-# Health check
-HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:8000/').read()" || exit 1
 
 # Copy and set entrypoint script
 COPY entrypoint.sh /app/entrypoint.sh

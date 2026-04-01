@@ -152,6 +152,17 @@ CSRF_TRUSTED_ORIGINS = os.environ.get(
     'CSRF_TRUSTED_ORIGINS', 'http://localhost:8000'
 ).split(',')
 
+# Auto-detect Railway public domain for CSRF (Railway injects RAILWAY_PUBLIC_DOMAIN)
+_railway_domain = os.environ.get('RAILWAY_PUBLIC_DOMAIN', '')
+if _railway_domain:
+    _railway_https = f'https://{_railway_domain}'
+    if _railway_https not in CSRF_TRUSTED_ORIGINS:
+        CSRF_TRUSTED_ORIGINS.append(_railway_https)
+    # Also trust the bare hostname (Railway sometimes uses this)
+    _railway_http = f'http://{_railway_domain}'
+    if _railway_http not in CSRF_TRUSTED_ORIGINS:
+        CSRF_TRUSTED_ORIGINS.append(_railway_http)
+
 # Email configuration
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = os.environ.get('EMAIL_HOST', 'mmtp.iitk.ac.in')
