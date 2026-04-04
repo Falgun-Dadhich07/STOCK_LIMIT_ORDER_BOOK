@@ -53,7 +53,7 @@ def home(request):
         # Check if market is active
         if not market.is_active:
             messages.error(request, "Market is currently CLOSED. Orders cannot be placed.")
-            return redirect('/home')
+            return redirect('/home/')
 
         order_type = request.POST.get('order_type')
         order_mode = request.POST.get('order_mode')
@@ -114,7 +114,7 @@ def home(request):
                         messages.success(request, 'Your order has been placed successfully!')
                     except Exception as e:
                         messages.error(request, f"Order could not be saved: {e}")
-                    return redirect('/home')
+                    return redirect('/home/')
             else:
                 new_order = Stoploss_Order(
                     order_type=order_type,
@@ -136,7 +136,7 @@ def home(request):
                     new_order.save()
                     broadcast_orderbook_update()
                     messages.success(request, 'Your Stoploss order has been placed successfully!')
-                    return redirect('/home')
+                    return redirect('/home/')
 
         except Exception as e:
             return render(request, 'trading/home.html', {'error': 'Unable to fetch market price for the order type.'})
