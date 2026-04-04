@@ -46,7 +46,7 @@ def get_best_bid(request):
 @login_required
 def home(request):
     user = request.user
-    user, created = User.objects.get_or_create(username=user)
+    user, created = User.objects.get_or_create(username=user.username)
     market = get_or_create_market()
 
     if request.method == "POST":
@@ -470,7 +470,7 @@ def download_trades_csv(request):
 def market_maker_page(request):
     """Market Maker configuration and control page for regular users."""
     user = request.user
-    trading_user, _ = User.objects.get_or_create(username=user)
+    trading_user, _ = User.objects.get_or_create(username=user.username)
     market = get_or_create_market()
 
     mm_config, _ = MarketMakerConfig.objects.get_or_create(
@@ -536,7 +536,7 @@ def market_maker_page(request):
 @login_required
 def market_maker_status(request):
     """JSON endpoint: return current market maker status for the logged-in user."""
-    trading_user, _ = User.objects.get_or_create(username=request.user)
+    trading_user, _ = User.objects.get_or_create(username=request.user.username)
     try:
         mm_config = MarketMakerConfig.objects.get(user=trading_user)
         pending = Order.objects.filter(user=trading_user, is_market_maker=True, is_matched=False).count()
