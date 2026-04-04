@@ -96,12 +96,36 @@ WSGI_APPLICATION = "trading_system.wsgi.application"
 
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
-# Railway injects DATABASE_URL automatically when you add a PostgreSQL service
+#
+# Priority order:
+#   1. DATABASE_URL (Railway PostgreSQL plugin, Heroku, etc.)
+#   2. PGHOST / PGPORT / PGDATABASE / PGUSER / PGPASSWORD (also injected by Railway)
+#   3. Individual DB_* env vars (local dev)
 
-# Railway injects DATABASE_URL; fall back to individual env vars for local dev
-if os.environ.get('DATABASE_URL'):
+_database_url = os.environ.get('DATABASE_URL') or os.environ.get('POSTGRES_URL')
+_pghost = os.environ.get('PGHOST') or os.environ.get('RAILWAY_TCP_PROXY_DOMAIN')
+
+if _database_url:
     DATABASES = {
-        'default': dj_database_url.config(default=os.environ.get('DATABASE_URL'))
+        'default': dj_database_url.config(
+            default=_database_url,
+            conn_max_age=60,
+            conn_health_checks=True,
+        )
+    }
+elif _pghost:
+    # Railway also exports individual PG* variables — use them directly
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': os.environ.get('PGDATABASE', 'railway'),
+            'USER': os.environ.get('PGUSER', 'postgres'),
+            'PASSWORD': os.environ.get('PGPASSWORD', ''),
+            'HOST': _pghost,
+            'PORT': os.environ.get('PGPORT', '5432'),
+            'CONN_MAX_AGE': 60,
+            'CONN_HEALTH_CHECKS': True,
+        }
     }
 else:
     DATABASES = {
@@ -147,10 +171,25 @@ STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 LOGIN_REDIRECT_URL = 'home'
+LOGIN_URL = '/'
+
+# Trust Railway's TLS-terminating reverse proxy
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 CSRF_TRUSTED_ORIGINS = os.environ.get(
     'CSRF_TRUSTED_ORIGINS', 'http://localhost:8000'
 ).split(',')
+
+# Auto-detect Railway public domain for CSRF (Railway injects RAILWAY_PUBLIC_DOMAIN)
+_railway_domain = os.environ.get('RAILWAY_PUBLIC_DOMAIN', '')
+if _railway_domain:
+    _railway_https = f'https://{_railway_domain}'
+    if _railway_https not in CSRF_TRUSTED_ORIGINS:
+        CSRF_TRUSTED_ORIGINS.append(_railway_https)
+    # Also trust the bare hostname (Railway sometimes uses this)
+    _railway_http = f'http://{_railway_domain}'
+    if _railway_http not in CSRF_TRUSTED_ORIGINS:
+        CSRF_TRUSTED_ORIGINS.append(_railway_http)
 
 # Email configuration
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
@@ -160,3 +199,42 @@ EMAIL_USE_TLS = True
 EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', '')
 EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
+
+# Logging — send all request errors to stderr so Railway's log stream captures them
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '{levelname} {asctime} {module} {message}',
+            'style': '{',
+        },
+    },
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+            'formatter': 'verbose',
+        },
+    },
+    'root': {
+        'handlers': ['console'],
+        'level': 'WARNING',
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['console'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+        'django.request': {
+            'handlers': ['console'],
+            'level': 'ERROR',
+            'propagate': False,
+        },
+        'trading': {
+            'handlers': ['console'],
+            'level': 'ERROR',
+            'propagate': False,
+        },
+    },
+}

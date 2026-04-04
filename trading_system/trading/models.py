@@ -1,5 +1,6 @@
 from django.db import models
 from django.utils.timezone import now
+from decimal import Decimal
 
 
 class User(models.Model):
@@ -29,12 +30,9 @@ class Order(models.Model):
     price = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
     timestamp = models.DateTimeField(auto_now_add=True)
     is_matched = models.BooleanField(default=False)
-    # original_quantity = models.IntegerField()
-    original_quantity = models.IntegerField(default=0)  # New field added
-
- 
-
+    original_quantity = models.IntegerField(default=0)
     is_ioc = models.BooleanField(default=False)
+    is_market_maker = models.BooleanField(default=False)
 
     def __str__(self):
         return f"{self.order_type} {self.order_mode} Order #{self.id} by {self.user}"
@@ -117,3 +115,35 @@ class MarketMaster(models.Model):
         self.total_trades = 0
         self.total_volume = 0
         self.save()
+
+
+class MarketMakerConfig(models.Model):
+    """Configuration for a user's automated market-making strategy."""
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='market_maker')
+    is_active = models.BooleanField(default=False)
+    reference_price = models.DecimalField(
+        max_digits=10, decimal_places=2, null=True, blank=True,
+        help_text="Base price for orders. Leave blank to use Last Traded Price."
+    )
+    spread_pct = models.DecimalField(
+        max_digits=5, decimal_places=2, default=Decimal('1.00'),
+        help_text="Spread percentage per level (e.g. 1.0 = 1%)"
+    )
+    quantity = models.IntegerField(
+        default=100,
+        help_text="Number of shares per order at each level"
+    )
+    num_levels = models.IntegerField(
+        default=3,
+        help_text="Number of buy/sell price levels to maintain (1-10)"
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "Market Maker Config"
+        verbose_name_plural = "Market Maker Configs"
+
+    def __str__(self):
+        status = "ACTIVE" if self.is_active else "INACTIVE"
+        return f"MarketMaker({self.user.username}) [{status}]"

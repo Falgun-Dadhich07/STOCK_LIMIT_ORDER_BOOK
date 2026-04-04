@@ -210,10 +210,13 @@ def broadcast_orderbook_update():
     }
 
     channel_layer = get_channel_layer()
-    async_to_sync(channel_layer.group_send)(
-        'orderbook_group',
-        {
-            'type': 'send_order_update',
-            'payload': payload,
-        }
-    )
+    try:
+        async_to_sync(channel_layer.group_send)(
+            'orderbook_group',
+            {
+                'type': 'send_order_update',
+                'payload': payload,
+            }
+        )
+    except Exception:
+        pass  # Redis may be unavailable; fail silently so orders still go through

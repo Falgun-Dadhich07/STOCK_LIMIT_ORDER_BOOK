@@ -1,9 +1,10 @@
 from django.shortcuts import render, redirect
-from .models import User, Order, Trade, Stoploss_Order, MarketMaster
+from .models import User, Order, Trade, Stoploss_Order, MarketMaster, MarketMakerConfig
 from django.db.models import Q
 from django.db import transaction
 from django.contrib.auth.decorators import login_required
 import json
+from decimal import Decimal, ROUND_HALF_UP
 from django.contrib import messages
 from .utils import broadcast_orderbook_update, match_order, get_or_create_market
 from django.http import JsonResponse
@@ -45,14 +46,14 @@ def get_best_bid(request):
 @login_required
 def home(request):
     user = request.user
-    user, created = User.objects.get_or_create(username=user)
+    user, created = User.objects.get_or_create(username=user.username)
     market = get_or_create_market()
 
     if request.method == "POST":
         # Check if market is active
         if not market.is_active:
             messages.error(request, "Market is currently CLOSED. Orders cannot be placed.")
-            return redirect('/home')
+            return redirect('/home/')
 
         order_type = request.POST.get('order_type')
         order_mode = request.POST.get('order_mode')
@@ -113,7 +114,7 @@ def home(request):
                         messages.success(request, 'Your order has been placed successfully!')
                     except Exception as e:
                         messages.error(request, f"Order could not be saved: {e}")
-                    return redirect('/home')
+                    return redirect('/home/')
             else:
                 new_order = Stoploss_Order(
                     order_type=order_type,
@@ -135,7 +136,7 @@ def home(request):
                     new_order.save()
                     broadcast_orderbook_update()
                     messages.success(request, 'Your Stoploss order has been placed successfully!')
-                    return redirect('/home')
+                    return redirect('/home/')
 
         except Exception as e:
             return render(request, 'trading/home.html', {'error': 'Unable to fetch market price for the order type.'})
@@ -459,3 +460,157 @@ def download_trades_csv(request):
         writer.writerow([trade.id, trade.buyer.username, trade.seller.username, trade.quantity, trade.price, trade.timestamp])
 
     return response
+
+
+# ===========================
+# Market Maker Views
+# ===========================
+
+@login_required
+def market_maker_page(request):
+    """Market Maker configuration and control page for regular users."""
+    user = request.user
+    trading_user, _ = User.objects.get_or_create(username=user.username)
+    market = get_or_create_market()
+
+    mm_config, _ = MarketMakerConfig.objects.get_or_create(
+        user=trading_user,
+        defaults={
+            'spread_pct': Decimal('1.00'),
+            'quantity': 100,
+            'num_levels': 3,
+        }
+    )
+
+    if request.method == 'POST':
+        action = request.POST.get('action')
+
+        if action == 'save':
+            try:
+                ref_price_raw = request.POST.get('reference_price', '').strip()
+                mm_config.reference_price = Decimal(ref_price_raw) if ref_price_raw else None
+                mm_config.spread_pct = Decimal(request.POST.get('spread_pct', '1.00'))
+                mm_config.quantity = int(request.POST.get('quantity', 100))
+                mm_config.num_levels = min(10, max(1, int(request.POST.get('num_levels', 3))))
+                mm_config.save()
+                messages.success(request, 'Market Maker configuration saved.')
+            except Exception as e:
+                messages.error(request, f'Failed to save configuration: {e}')
+            return redirect('market_maker')
+
+        elif action == 'activate':
+            if not market.is_active:
+                messages.error(request, 'Cannot activate Market Maker — market is currently CLOSED.')
+                return redirect('market_maker')
+            try:
+                _activate_market_maker(trading_user, mm_config, market)
+                mm_config.is_active = True
+                mm_config.save()
+                messages.success(request, f'Market Maker activated — placed {mm_config.num_levels * 2} orders.')
+            except Exception as e:
+                messages.error(request, f'Failed to activate Market Maker: {e}')
+            return redirect('market_maker')
+
+        elif action == 'deactivate':
+            try:
+                _cancel_market_maker_orders(trading_user)
+                mm_config.is_active = False
+                mm_config.save()
+                messages.success(request, 'Market Maker deactivated. All pending MM orders cancelled.')
+            except Exception as e:
+                messages.error(request, f'Failed to deactivate Market Maker: {e}')
+            return redirect('market_maker')
+
+    mm_orders = Order.objects.filter(user=trading_user, is_market_maker=True, is_matched=False).order_by('-order_type', 'price')
+    buy_mm_orders = [o for o in mm_orders if o.order_type == 'BUY']
+    sell_mm_orders = [o for o in mm_orders if o.order_type == 'SELL']
+
+    return render(request, 'trading/market_maker.html', {
+        'mm_config': mm_config,
+        'market': market,
+        'buy_mm_orders': buy_mm_orders,
+        'sell_mm_orders': sell_mm_orders,
+    })
+
+
+@login_required
+def market_maker_status(request):
+    """JSON endpoint: return current market maker status for the logged-in user."""
+    trading_user, _ = User.objects.get_or_create(username=request.user.username)
+    try:
+        mm_config = MarketMakerConfig.objects.get(user=trading_user)
+        pending = Order.objects.filter(user=trading_user, is_market_maker=True, is_matched=False).count()
+        return JsonResponse({
+            'is_active': mm_config.is_active,
+            'spread_pct': float(mm_config.spread_pct),
+            'quantity': mm_config.quantity,
+            'num_levels': mm_config.num_levels,
+            'reference_price': float(mm_config.reference_price) if mm_config.reference_price else None,
+            'pending_orders': pending,
+        })
+    except MarketMakerConfig.DoesNotExist:
+        return JsonResponse({'is_active': False, 'pending_orders': 0})
+
+
+def _activate_market_maker(trading_user, mm_config, market):
+    """Internal helper: place limit orders based on Market Maker config."""
+    # Determine the reference price
+    ref_price = mm_config.reference_price
+    if ref_price is None:
+        if market.last_traded_price:
+            ref_price = market.last_traded_price
+        else:
+            raise ValueError("No reference price available. Please set one or wait for a trade.")
+
+    ref_price = Decimal(str(ref_price))
+    spread = Decimal(str(mm_config.spread_pct)) / Decimal('100')
+    qty = mm_config.quantity
+
+    # Cancel existing MM orders first to avoid duplicates
+    _cancel_market_maker_orders(trading_user)
+
+    new_orders = []
+    for level in range(1, mm_config.num_levels + 1):
+        level_d = Decimal(str(level))
+        buy_price = (ref_price * (1 - spread * level_d)).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+        sell_price = (ref_price * (1 + spread * level_d)).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+
+        if buy_price <= 0:
+            continue
+
+        new_orders.append(Order(
+            user=trading_user,
+            order_type='BUY',
+            order_mode='LIMIT',
+            quantity=qty,
+            disclosed=qty,
+            price=buy_price,
+            original_quantity=qty,
+            is_matched=False,
+            is_market_maker=True,
+        ))
+        new_orders.append(Order(
+            user=trading_user,
+            order_type='SELL',
+            order_mode='LIMIT',
+            quantity=qty,
+            disclosed=qty,
+            price=sell_price,
+            original_quantity=qty,
+            is_matched=False,
+            is_market_maker=True,
+        ))
+
+    Order.objects.bulk_create(new_orders)
+
+    # Attempt to match newly created orders
+    for order in Order.objects.filter(user=trading_user, is_market_maker=True, is_matched=False):
+        match_order(order)
+
+    broadcast_orderbook_update()
+
+
+def _cancel_market_maker_orders(trading_user):
+    """Internal helper: cancel all pending MM orders for a user."""
+    Order.objects.filter(user=trading_user, is_market_maker=True, is_matched=False).delete()
+    broadcast_orderbook_update()
